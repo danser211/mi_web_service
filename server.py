@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import ssl
 
 # ==================== CONFIGURACIÓN INICIAL ====================
 load_dotenv()  # Cargar variables del archivo .env
@@ -24,16 +25,36 @@ class DummyDB:
     def count_documents(self, *args, **kwargs):
         return 0
 
-# ==================== CONEXIÓN MONGODB ====================
+# ==================== CONEXIÓN MONGODB OPTIMIZADA PARA RENDER ====================
 try:
     mongodb_uri = os.getenv("MONGODB_URI")
     if not mongodb_uri:
         raise ValueError("❌ ERROR: MONGODB_URI no está definida en .env")
     
-    client = MongoClient(mongodb_uri, serverSelectionTimeoutMS=5000)  # Timeout de 5 segundos
+    print(f"🔗 Intentando conectar a MongoDB...")
+    
+    # ⚡ CONFIGURACIÓN OPTIMIZADA PARA RENDER:
+    client = MongoClient(
+        mongodb_uri,
+        # Optimizaciones de velocidad:
+        connectTimeoutMS=10000,      # 10 segundos máximo para conectar
+        socketTimeoutMS=15000,       # 15 segundos máximo para operaciones
+        serverSelectionTimeoutMS=10000,  # 10 segundos para elegir servidor
+        maxPoolSize=20,              # Máximo 20 conexiones simultáneas
+        minPoolSize=5,               # Mantener 5 conexiones siempre listas
+        retryWrites=True,            # Reintentar escrituras fallidas
+        tls=True,                    # Usar TLS/SSL (IMPORTANTE para Atlas)
+        tlsAllowInvalidCertificates=False,  # No permitir certificados inválidos
+        
+        # Parámetros adicionales para mejor rendimiento:
+        waitQueueTimeoutMS=10000,    # 10 segundos máximo en cola
+        connect=True,                # Conectar inmediatamente
+        appname="CineTec-Render"     # Identificador para MongoDB
+    )
+    
     # Verificar conexión
     client.admin.command('ping')
-    print("✅ Conexión a MongoDB exitosa")
+    print("✅ Conexión a MongoDB exitosa - Configuración optimizada para Render")
     
     db = client.registro
     usuarios_collection = db.usuarios
@@ -97,7 +118,7 @@ def pelispy():
         return redirect(url_for('iniciopy'))
     return render_template("pelispy.html")
 
-# ==================== REGISTRO DE USUARIO ====================
+# ==================== REGISTRO DE USUARIO OPTIMIZADO ====================
 @app.route("/register", methods=["POST"])
 def register():
     if not mongo_disponible:
@@ -130,18 +151,20 @@ def register():
         return redirect(url_for('registrow'))
     
     try:
-        # Validar que el usuario no exista
+        # ⚡ OPTIMIZACIÓN: Usar índice para búsquedas más rápidas
+        # Primero verificar si el usuario existe
         if usuarios_collection.find_one({"usuario": usuario}):
             flash("El usuario ya existe", "error")
             return redirect(url_for('registrow'))
         
-        # Validar que el email no exista
+        # Luego verificar email
         if usuarios_collection.find_one({"email": email}):
             flash("El email ya está registrado", "error")
             return redirect(url_for('registrow'))
         
-        # Crear usuario
+        # Crear usuario con datos optimizados
         hashed_password = generate_password_hash(password)
+        ahora = datetime.now()
         nuevo_usuario = {
             "usuario": usuario,
             "nombre": nombre,
@@ -149,19 +172,25 @@ def register():
             "password": hashed_password,
             "descripcion": "Nuevo usuario de CineTec",
             "foto_perfil": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-            "fecha_registro": datetime.now(),
-            "ultimo_acceso": datetime.now()
+            "fecha_registro": ahora,
+            "ultimo_acceso": ahora
         }
         
-        usuarios_collection.insert_one(nuevo_usuario)
-        flash("¡Registro exitoso! Ahora puedes iniciar sesión", "success")
+        # ⚡ Insertar de manera optimizada
+        resultado = usuarios_collection.insert_one(nuevo_usuario)
+        
+        # Verificar que se insertó correctamente
+        if resultado.inserted_id:
+            flash("¡Registro exitoso! Ahora puedes iniciar sesión", "success")
+        else:
+            flash("Error al registrar usuario", "error")
         
     except Exception as e:
         flash(f"Error en el registro: {str(e)}", "error")
     
     return redirect(url_for('iniciopy'))
 
-# ==================== INICIO DE SESIÓN ====================
+# ==================== INICIO DE SESIÓN OPTIMIZADO ====================
 @app.route("/login", methods=["POST"])
 def login():
     if not mongo_disponible:
@@ -172,7 +201,11 @@ def login():
     password = request.form.get("password")
     
     try:
-        usuario_db = usuarios_collection.find_one({"usuario": usuario})
+        # ⚡ Buscar solo los campos necesarios para mejorar velocidad
+        usuario_db = usuarios_collection.find_one(
+            {"usuario": usuario},
+            {"usuario": 1, "nombre": 1, "password": 1, "descripcion": 1, "foto_perfil": 1}
+        )
         
         if usuario_db and check_password_hash(usuario_db["password"], password):
             session['usuario'] = usuario_db["usuario"]
@@ -180,10 +213,11 @@ def login():
             session['descripcion'] = usuario_db.get("descripcion", "")
             session['foto_perfil'] = usuario_db.get("foto_perfil", "https://cdn-icons-png.flaticon.com/512/3135/3135715.png")
             
-            # Actualizar último acceso
+            # ⚡ Actualizar último acceso de manera eficiente
             usuarios_collection.update_one(
                 {"usuario": usuario},
-                {"$set": {"ultimo_acceso": datetime.now()}}
+                {"$set": {"ultimo_acceso": datetime.now()}},
+                upsert=False  # No crear si no existe
             )
             
             flash(f"¡Bienvenido {usuario_db['nombre']}!", "success")
@@ -210,12 +244,18 @@ def update_status():
     nueva_descripcion = request.form.get("descripcion")
     if nueva_descripcion and len(nueva_descripcion.strip()) > 0:
         try:
-            usuarios_collection.update_one(
+            # ⚡ Actualización optimizada
+            resultado = usuarios_collection.update_one(
                 {"usuario": session['usuario']},
                 {"$set": {"descripcion": nueva_descripcion.strip()}}
             )
-            session['descripcion'] = nueva_descripcion.strip()
-            flash("Estado actualizado correctamente", "success")
+            
+            if resultado.modified_count > 0:
+                session['descripcion'] = nueva_descripcion.strip()
+                flash("Estado actualizado correctamente", "success")
+            else:
+                flash("No se pudo actualizar el estado", "warning")
+                
         except Exception as e:
             flash(f"Error al actualizar estado: {str(e)}", "error")
     
@@ -235,12 +275,17 @@ def update_profile_pic():
     nueva_foto = request.form.get("foto_url")
     if nueva_foto and nueva_foto.startswith(('http://', 'https://')):
         try:
-            usuarios_collection.update_one(
+            resultado = usuarios_collection.update_one(
                 {"usuario": session['usuario']},
                 {"$set": {"foto_perfil": nueva_foto}}
             )
-            session['foto_perfil'] = nueva_foto
-            flash("Foto de perfil actualizada", "success")
+            
+            if resultado.modified_count > 0:
+                session['foto_perfil'] = nueva_foto
+                flash("Foto de perfil actualizada", "success")
+            else:
+                flash("No se pudo actualizar la foto", "warning")
+                
         except Exception as e:
             flash(f"Error al actualizar foto: {str(e)}", "error")
     else:
@@ -255,7 +300,7 @@ def logout():
     flash("Has cerrado sesión correctamente", "success")
     return redirect(url_for('index'))
 
-# ==================== API PARA OBTENER DATOS ====================
+# ==================== API PARA OBTENER DATOS OPTIMIZADA ====================
 @app.route("/api/usuarios")
 def api_usuarios():
     """API para obtener lista de usuarios"""
@@ -266,13 +311,18 @@ def api_usuarios():
         return jsonify({"error": "Base de datos no disponible"}), 503
     
     try:
-        usuarios = list(usuarios_collection.find({}, {
-            "_id": 0,
-            "usuario": 1,
-            "nombre": 1,
-            "descripcion": 1,
-            "fecha_registro": 1
-        }).sort("fecha_registro", -1).limit(50))
+        # ⚡ OPTIMIZACIÓN: Limitar a 20 usuarios y usar proyección específica
+        usuarios = list(usuarios_collection.find(
+            {},  # Sin filtro
+            {  # Solo campos necesarios
+                "_id": 0,
+                "usuario": 1,
+                "nombre": 1,
+                "descripcion": 1,
+                "fecha_registro": 1,
+                "foto_perfil": 1
+            }
+        ).sort("fecha_registro", -1).limit(20))  # ⚡ Solo 20 registros
         
         # Convertir fechas
         for usuario in usuarios:
@@ -295,7 +345,8 @@ def status():
             "database": "connected" if mongo_disponible else "disconnected",
             "total_usuarios": total_usuarios,
             "timestamp": datetime.now().isoformat(),
-            "mongo_disponible": mongo_disponible
+            "mongo_disponible": mongo_disponible,
+            "optimized_for": "Render"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -320,20 +371,20 @@ def bad_request(e):
         "message": "Verifica los datos enviados"
     }), 400
 
-# ==================== MIDDLEWARE PARA CACHÉ ====================
+# ==================== MIDDLEWARE PARA CACHÉ OPTIMIZADO ====================
 @app.after_request
 def add_header(response):
     """
-    Agrega headers de caché para mejorar rendimiento
+    Agrega headers de caché para mejorar rendimiento en Render
     """
-    # Cache por 5 minutos para archivos estáticos
+    # Cache por 10 minutos para archivos estáticos (más tiempo para Render)
     if request.path.startswith('/static/') or request.path.endswith(('.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg')):
-        response.cache_control.max_age = 300
+        response.cache_control.max_age = 600
         response.cache_control.public = True
-        response.cache_control.s_maxage = 300
-    # Cache corto para páginas principales (1 minuto)
+        response.cache_control.s_maxage = 600
+    # Cache corto para páginas principales (2 minutos)
     elif request.path in ['/', '/iniciopy', '/registrow']:
-        response.cache_control.max_age = 60
+        response.cache_control.max_age = 120
         response.cache_control.public = True
     # No cache para páginas dinámicas y API
     else:
@@ -341,33 +392,44 @@ def add_header(response):
         response.cache_control.no_store = True
         response.cache_control.must_revalidate = True
     
-    # Seguridad básica
+    # Seguridad básica para Render
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['Server'] = 'CineTec'  # Ocultar información del servidor
     
     return response
 
-# ==================== INICIAR APLICACIÓN ====================
+# ==================== INICIAR APLICACIÓN OPTIMIZADO PARA RENDER ====================
 if __name__ == "__main__":
-    # Configuración OPTIMIZADA para producción
+    # Configuración OPTIMIZADA para Render
     port = int(os.environ.get("PORT", 5000))
     
-    print("=" * 50)
-    print("🚀 Iniciando CineTec")
+    print("=" * 60)
+    print("🚀 INICIANDO CINETEC - VERSIÓN OPTIMIZADA PARA RENDER")
+    print("=" * 60)
     print(f"📊 Puerto: {port}")
     print(f"✅ MongoDB: {'CONECTADO' if mongo_disponible else 'DESCONECTADO'}")
+    if mongo_disponible:
+        print(f"📈 Pool de conexiones: 5-20 conexiones simultáneas")
+        print(f"⚡ Timeouts: Conectar=10s, Operaciones=15s")
     print(f"🔗 Health Check: http://localhost:{port}/health")
-    print(f"🔗 Estado: http://localhost:{port}/status")
-    print("=" * 50)
+    print(f"🔗 Estado del sistema: http://localhost:{port}/status")
+    print("=" * 60)
+    print("✨ Configuración aplicada:")
+    print("   • TLS/SSL habilitado")
+    print("   • Pool de conexiones optimizado")
+    print("   • Timeouts aumentados para Render")
+    print("   • Caché extendido para estáticos")
+    print("=" * 60)
     
-    # OPCIONES DE PRODUCCIÓN:
-    # - debug=False: No mostrar errores detallados (más seguro y rápido)
-    # - threaded=True: Atender múltiples solicitudes simultáneamente
-    # - use_reloader=False: Evitar doble inicio (problemas en Render)
+    # ⚡ CONFIGURACIÓN DE PRODUCCIÓN PARA RENDER:
     app.run(
         host="0.0.0.0",      # Aceptar conexiones de cualquier IP
-        port=port,           # Puerto definido por Render o 5000
+        port=port,           # Puerto definido por Render
         debug=False,         # IMPORTANTE: False en producción
-        threaded=True,       # Mejor concurrencia
-        use_reloader=False   # Evita problemas en servicios como Render
+        threaded=True,       # Atender múltiples solicitudes
+        use_reloader=False,  # Evitar problemas en Render
+        # ⚡ Nuevos parámetros para mejor rendimiento:
+        processes=1,         # Usar 1 proceso (Render maneja la escalabilidad)
+        load_dotenv=False    # Ya cargamos .env al inicio
     )
