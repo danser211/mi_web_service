@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta http-equiv="Cache-Control" content="public, max-age=3600">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Películas - CineTec</title>
+    <!-- Cache para navegador -->
+    <meta http-equiv="Cache-Control" content="public, max-age=3600">
     <style>
         * {
             margin: 0;
@@ -148,6 +151,8 @@
             height: 350px;
             object-fit: cover;
             border-bottom: 2px solid #334155;
+            /* Optimización: carga perezosa */
+            loading: lazy;
         }
         
         .movie-info {
@@ -205,8 +210,8 @@
             background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
             color: white;
             border: none;
-            padding: 12px;
             border-radius: 8px;
+            padding: 12px;
             cursor: pointer;
             font-weight: 600;
             display: flex;
@@ -365,9 +370,9 @@
         <h1 class="section-title">🎬 Películas Recomendadas</h1>
         
         <div class="movies-grid">
-            <!-- PELÍCULA 1 -->
+            <!-- PELÍCULA 1 - El Resplandor -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMDFkYTc0MGEtZmNhMC00ZDIzLWFmNTEtODM1ZmRlYWMwMWFmXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/9O7gLzmreU0nGkIB6K3BsJbzvNv.jpg" 
                      alt="El Resplandor" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Resplandor</h3>
@@ -388,9 +393,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 2 -->
+            <!-- PELÍCULA 2 - El Padrino -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/3Tf8vXykYhzHdT0BtsYTp570JGQ.jpg" 
                      alt="El Padrino" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Padrino</h3>
@@ -411,9 +416,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 3 -->
+            <!-- PELÍCULA 3 - El Caballero Oscuro -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/qJ2tW6WMUDux911r6m7haRef0WH.jpg" 
                      alt="El Caballero Oscuro" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Caballero Oscuro</h3>
@@ -434,9 +439,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 4 -->
+            <!-- PELÍCULA 4 - La Lista de Schindler -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BNDE4OTMxMTctNmRhYy00NWE2LTg3YzItYTk3M2UwOTU5Njg4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg" 
                      alt="Schindler's List" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">La Lista de Schindler</h3>
@@ -457,9 +462,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 5 -->
+            <!-- PELÍCULA 5 - Matrix -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" 
                      alt="Matrix" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Matrix</h3>
@@ -480,9 +485,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 6 -->
+            <!-- PELÍCULA 6 - Origen -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/8IB2e4r4oVhH3HmIPL4tq4WY8g0.jpg" 
                      alt="Origen" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Origen</h3>
@@ -503,9 +508,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 7 -->
+            <!-- PELÍCULA 7 - Pulp Fiction -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMjlmZmI5MDctNDE2YS00YWE0LWE5ZWItZDBhYWQ0NTcxNWRhXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg" 
                      alt="Pulp Fiction" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Pulp Fiction</h3>
@@ -526,9 +531,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 8 -->
+            <!-- PELÍCULA 8 - El Señor de los Anillos -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BOTU5ODg3OGI2M5BMl5BanBnXkFtZTcwMzQ5Mzc0Mw@@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg" 
                      alt="El Señor de los Anillos" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Señor de los Anillos</h3>
@@ -549,9 +554,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 9 -->
+            <!-- PELÍCULA 9 - Forrest Gump -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMjA5Njk3MjM4OV5BMl5BanBnXkFtZTcwMTc5MTE1MQ@@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/yE5d3BUhE8hCnkMUJOo1QDoOGNz.jpg" 
                      alt="Forrest Gump" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Forrest Gump</h3>
@@ -572,9 +577,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 10 -->
+            <!-- PELÍCULA 10 - Interestelar -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" 
                      alt="Interestelar" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Interestelar</h3>
@@ -595,9 +600,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 11 -->
+            <!-- PELÍCULA 11 - El Rey León -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMTk4ODQzNDY3Ml5BMl5BanBnXkFtZTcwODA0NTM4Nw@@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/4bjY6e1h3J7LxjSgZQxCf6mZvqN.jpg" 
                      alt="El Rey León" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Rey León</h3>
@@ -618,9 +623,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 12 -->
+            <!-- PELÍCULA 12 - Gladiador -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMGU2NzRmZjUtOGUxYS00ZjdjLWEwZWItY2NlM2JhNjkxNTFmXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/ty8TGRuvJLPUmAR1H1nRIsgwvim.jpg" 
                      alt="Gladiador" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Gladiador</h3>
@@ -641,9 +646,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 13 -->
+            <!-- PELÍCULA 13 - Reservoir Dogs -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/twrncjnWqHwIxZ8qCj4m6N9D8f8.jpg" 
                      alt="Reservoir Dogs" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Reservoir Dogs</h3>
@@ -664,9 +669,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 14 -->
+            <!-- PELÍCULA 14 - Titanic -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMDliMmNhNDEtODUyOS00MjNlLTgxODEtN2U3NzIxMGVkZTA1L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg" 
                      alt="Titanic" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Titanic</h3>
@@ -687,9 +692,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 15 -->
+            <!-- PELÍCULA 15 - Jurassic Park -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BNWIwODRlZTUtY2U3ZS00Yzg1LWJhNzYtMmZiYmEyNmU1NjMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/oU7Oq2kFAAlGqbU4VoAE36g4hoI.jpg" 
                      alt="Jurassic Park" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Jurassic Park</h3>
@@ -710,9 +715,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 16 -->
+            <!-- PELÍCULA 16 - El Silencio de los Inocentes -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMTMxMjAyMzIzMV5BMl5BanBnXkFtZTcwMTE3MjYyMQ@@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/uS9m8OBk1A8eM9I042bx8XXpqAq.jpg" 
                      alt="El Silencio de los Inocentes" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Silencio de los Inocentes</h3>
@@ -733,9 +738,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 17 -->
+            <!-- PELÍCULA 17 - Star Wars -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BYTViNjMyNmUtNDFkNC00ZDRlLThmMDUtZDU2YWE4NGI2ZjVmXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/6FfCtAuVAW8XJjZ7eWeLibRLWTw.jpg" 
                      alt="Star Wars" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Star Wars: Una Nueva Esperanza</h3>
@@ -756,9 +761,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 18 -->
+            <!-- PELÍCULA 18 - Terminator 2 -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BOTJiNDEzOWYtMTVlOC00MmQ2LWEzNDQtZGI2YjI4OGYzMjM3XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/5M0j0B18abtBI5gi2RhfjjurTqb.jpg" 
                      alt="Terminator 2" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Terminator 2: El Juicio Final</h3>
@@ -779,9 +784,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 19 -->
+            <!-- PELÍCULA 19 - Avatar -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMjA0ODE0MTcxN15BMl5BanBnXkFtZTcwODM0NDMzMw@@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/jRXYjXNq0Cs2TcJjLkki24MLp7u.jpg" 
                      alt="Avatar" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Avatar</h3>
@@ -802,9 +807,9 @@
                 </div>
             </div>
             
-            <!-- PELÍCULA 20 -->
+            <!-- PELÍCULA 20 - El Gran Hotel Budapest -->
             <div class="movie-card">
-                <img src="https://m.media-amazon.com/images/M/MV5BMTY5OTU0OTc2NV5BMl5BanBnXkFtZTcwMzU4MDcyMQ@@._V1_.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/eN1T1xJvjX6S5aI9HF2FbP7qqws.jpg" 
                      alt="El Gran Hotel Budapest" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Gran Hotel Budapest</h3>

@@ -7,17 +7,34 @@ import re
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-# Cargar variables de entorno
-load_dotenv()
+# ==================== CONFIGURACIÓN INICIAL ====================
+load_dotenv()  # Cargar variables del archivo .env
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "clave_secreta_por_defecto")
 
-# Conexión a MongoDB
-mongodb_uri = os.getenv("MONGODB_URI")
-client = MongoClient(mongodb_uri)
-db = client.registro
-usuarios_collection = db.usuarios
+# ==================== CONEXIÓN MONGODB ====================
+try:
+    mongodb_uri = os.getenv("MONGODB_URI")
+    if not mongodb_uri:
+        raise ValueError("❌ ERROR: MONGODB_URI no está definida en .env")
+    
+    client = MongoClient(mongodb_uri, serverSelectionTimeoutMS=5000)  # Timeout de 5 segundos
+    # Verificar conexión
+    client.admin.command('ping')
+    print("✅ Conexión a MongoDB exitosa")
+    
+    db = client.registro
+    usuarios_collection = db.usuarios
+    
+except Exception as e:
+    print(f"❌ Error conectando a MongoDB: {e}")
+    # Crear una colección dummy para desarrollo si MongoDB falla
+    class DummyDB:
+        def find_one(self, *args, **kwargs): return None
+        def insert_one(self, *args, **kwargs): return type('obj', (object,), {'inserted_id': 'dummy'})
+        def update_one(self, *args, **kwargs): return None
+    usuarios_collection = DummyDB()
 
 # ==================== HEALTH CHECK ====================
 @app.route("/health")
@@ -25,17 +42,21 @@ def health():
     """Endpoint para verificar que la app está funcionando"""
     try:
         # Verificar conexión a MongoDB
+        if isinstance(usuarios_collection, DummyDB):
+            raise ConnectionError("MongoDB no disponible")
+        
         client.admin.command('ping')
         return jsonify({
             "status": "healthy",
             "message": "Aplicación funcionando correctamente",
             "timestamp": datetime.now().isoformat(),
-            "database": "connected"
+            "database": "connected",
+            "version": "1.0.0"
         }), 200
     except Exception as e:
         return jsonify({
             "status": "unhealthy",
-            "message": f"Error en la aplicación: {str(e)}",
+            "message": f"Error: {str(e)}",
             "timestamp": datetime.now().isoformat(),
             "database": "disconnected"
         }), 500
@@ -68,19 +89,9 @@ def register():
     email = request.form.get("email")
     password = request.form.get("password")
     
-    # Validaciones
-    if not usuario or not nombre or not email or not password:
+    # Validaciones básicas
+    if not all([usuario, nombre, email, password]):
         flash("Todos los campos son requeridos", "error")
-        return redirect(url_for('registrow'))
-    
-    # Validar que el usuario no exista
-    if usuarios_collection.find_one({"usuario": usuario}):
-        flash("El usuario ya existe", "error")
-        return redirect(url_for('registrow'))
-    
-    # Validar que el email no exista
-    if usuarios_collection.find_one({"email": email}):
-        flash("El email ya está registrado", "error")
         return redirect(url_for('registrow'))
     
     # Validar nombre solo letras
@@ -98,21 +109,36 @@ def register():
         flash("La contraseña debe tener al menos 8 caracteres", "error")
         return redirect(url_for('registrow'))
     
-    # Crear usuario
-    hashed_password = generate_password_hash(password)
-    nuevo_usuario = {
-        "usuario": usuario,
-        "nombre": nombre,
-        "email": email,
-        "password": hashed_password,
-        "descripcion": "Nuevo usuario de CinePlus",
-        "foto_perfil": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-        "fecha_registro": datetime.now(),
-        "ultimo_acceso": datetime.now()
-    }
+    try:
+        # Validar que el usuario no exista
+        if usuarios_collection.find_one({"usuario": usuario}):
+            flash("El usuario ya existe", "error")
+            return redirect(url_for('registrow'))
+        
+        # Validar que el email no exista
+        if usuarios_collection.find_one({"email": email}):
+            flash("El email ya está registrado", "error")
+            return redirect(url_for('registrow'))
+        
+        # Crear usuario
+        hashed_password = generate_password_hash(password)
+        nuevo_usuario = {
+            "usuario": usuario,
+            "nombre": nombre,
+            "email": email,
+            "password": hashed_password,
+            "descripcion": "Nuevo usuario de CineTec",
+            "foto_perfil": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+            "fecha_registro": datetime.now(),
+            "ultimo_acceso": datetime.now()
+        }
+        
+        usuarios_collection.insert_one(nuevo_usuario)
+        flash("¡Registro exitoso! Ahora puedes iniciar sesión", "success")
+        
+    except Exception as e:
+        flash(f"Error en el registro: {str(e)}", "error")
     
-    usuarios_collection.insert_one(nuevo_usuario)
-    flash("¡Registro exitoso! Ahora puedes iniciar sesión", "success")
     return redirect(url_for('iniciopy'))
 
 # ==================== INICIO DE SESIÓN ====================
@@ -121,40 +147,49 @@ def login():
     usuario = request.form.get("usuario")
     password = request.form.get("password")
     
-    usuario_db = usuarios_collection.find_one({"usuario": usuario})
+    try:
+        usuario_db = usuarios_collection.find_one({"usuario": usuario})
+        
+        if usuario_db and check_password_hash(usuario_db["password"], password):
+            session['usuario'] = usuario_db["usuario"]
+            session['nombre'] = usuario_db["nombre"]
+            session['descripcion'] = usuario_db.get("descripcion", "")
+            session['foto_perfil'] = usuario_db.get("foto_perfil", "https://cdn-icons-png.flaticon.com/512/3135/3135715.png")
+            
+            # Actualizar último acceso
+            usuarios_collection.update_one(
+                {"usuario": usuario},
+                {"$set": {"ultimo_acceso": datetime.now()}}
+            )
+            
+            flash(f"¡Bienvenido {usuario_db['nombre']}!", "success")
+            return redirect(url_for('pelispy'))
+        else:
+            flash("Usuario o contraseña incorrectos", "error")
+            
+    except Exception as e:
+        flash(f"Error en el inicio de sesión: {str(e)}", "error")
     
-    if usuario_db and check_password_hash(usuario_db["password"], password):
-        session['usuario'] = usuario_db["usuario"]
-        session['nombre'] = usuario_db["nombre"]
-        session['descripcion'] = usuario_db.get("descripcion", "")
-        session['foto_perfil'] = usuario_db.get("foto_perfil", "https://cdn-icons-png.flaticon.com/512/3135/3135715.png")
-        
-        # Actualizar último acceso
-        usuarios_collection.update_one(
-            {"usuario": usuario},
-            {"$set": {"ultimo_acceso": datetime.now()}}
-        )
-        
-        flash(f"¡Bienvenido {usuario_db['nombre']}!", "success")
-        return redirect(url_for('pelispy'))
-    else:
-        flash("Usuario o contraseña incorrectos", "error")
-        return redirect(url_for('iniciopy'))
+    return redirect(url_for('iniciopy'))
 
 # ==================== ACTUALIZAR DESCRIPCIÓN ====================
 @app.route("/update_status", methods=["POST"])
 def update_status():
     if 'usuario' not in session:
+        flash("Debes iniciar sesión primero", "error")
         return redirect(url_for('iniciopy'))
     
     nueva_descripcion = request.form.get("descripcion")
-    if nueva_descripcion:
-        usuarios_collection.update_one(
-            {"usuario": session['usuario']},
-            {"$set": {"descripcion": nueva_descripcion}}
-        )
-        session['descripcion'] = nueva_descripcion
-        flash("Estado actualizado correctamente", "success")
+    if nueva_descripcion and len(nueva_descripcion.strip()) > 0:
+        try:
+            usuarios_collection.update_one(
+                {"usuario": session['usuario']},
+                {"$set": {"descripcion": nueva_descripcion.strip()}}
+            )
+            session['descripcion'] = nueva_descripcion.strip()
+            flash("Estado actualizado correctamente", "success")
+        except Exception as e:
+            flash(f"Error al actualizar estado: {str(e)}", "error")
     
     return redirect(url_for('pelispy'))
 
@@ -162,16 +197,22 @@ def update_status():
 @app.route("/update_profile_pic", methods=["POST"])
 def update_profile_pic():
     if 'usuario' not in session:
+        flash("Debes iniciar sesión primero", "error")
         return redirect(url_for('iniciopy'))
     
     nueva_foto = request.form.get("foto_url")
-    if nueva_foto:
-        usuarios_collection.update_one(
-            {"usuario": session['usuario']},
-            {"$set": {"foto_perfil": nueva_foto}}
-        )
-        session['foto_perfil'] = nueva_foto
-        flash("Foto de perfil actualizada", "success")
+    if nueva_foto and nueva_foto.startswith(('http://', 'https://')):
+        try:
+            usuarios_collection.update_one(
+                {"usuario": session['usuario']},
+                {"$set": {"foto_perfil": nueva_foto}}
+            )
+            session['foto_perfil'] = nueva_foto
+            flash("Foto de perfil actualizada", "success")
+        except Exception as e:
+            flash(f"Error al actualizar foto: {str(e)}", "error")
+    else:
+        flash("URL de foto inválida", "error")
     
     return redirect(url_for('pelispy'))
 
@@ -185,24 +226,43 @@ def logout():
 # ==================== API PARA OBTENER DATOS ====================
 @app.route("/api/usuarios")
 def api_usuarios():
-    """API para obtener lista de usuarios (solo para administración)"""
+    """API para obtener lista de usuarios"""
     if 'usuario' not in session:
         return jsonify({"error": "No autorizado"}), 401
     
-    usuarios = list(usuarios_collection.find({}, {
-        "_id": 0,
-        "usuario": 1,
-        "nombre": 1,
-        "descripcion": 1,
-        "fecha_registro": 1
-    }).sort("fecha_registro", -1).limit(50))
-    
-    # Convertir fechas
-    for usuario in usuarios:
-        if 'fecha_registro' in usuario:
-            usuario['fecha_registro'] = usuario['fecha_registro'].isoformat()
-    
-    return jsonify(usuarios)
+    try:
+        usuarios = list(usuarios_collection.find({}, {
+            "_id": 0,
+            "usuario": 1,
+            "nombre": 1,
+            "descripcion": 1,
+            "fecha_registro": 1
+        }).sort("fecha_registro", -1).limit(50))
+        
+        # Convertir fechas
+        for usuario in usuarios:
+            if 'fecha_registro' in usuario:
+                usuario['fecha_registro'] = usuario['fecha_registro'].isoformat()
+        
+        return jsonify(usuarios)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ==================== PÁGINA DE ESTADO ====================
+@app.route("/status")
+def status():
+    """Página para ver el estado del sistema"""
+    try:
+        total_usuarios = usuarios_collection.count_documents({}) if not isinstance(usuarios_collection, DummyDB) else 0
+        return jsonify({
+            "app": "CineTec",
+            "status": "running",
+            "database": "connected" if not isinstance(usuarios_collection, DummyDB) else "disconnected",
+            "total_usuarios": total_usuarios,
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ==================== MANEJADOR DE ERRORES ====================
 @app.errorhandler(404)
@@ -213,41 +273,64 @@ def page_not_found(e):
 def internal_error(e):
     return jsonify({
         "error": "Error interno del servidor",
-        "message": "Por favor, intenta más tarde"
+        "message": "Por favor, intenta más tarde",
+        "timestamp": datetime.now().isoformat()
     }), 500
+
+@app.errorhandler(400)
+def bad_request(e):
+    return jsonify({
+        "error": "Solicitud incorrecta",
+        "message": "Verifica los datos enviados"
+    }), 400
 
 # ==================== MIDDLEWARE PARA CACHÉ ====================
 @app.after_request
 def add_header(response):
     """
-    Agrega headers de caché para archivos estáticos
-    Mejora el rendimiento en Render Free
+    Agrega headers de caché para mejorar rendimiento
     """
     # Cache por 5 minutos para archivos estáticos
-    if request.path.startswith('/static/') or request.path.endswith(('.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico')):
+    if request.path.startswith('/static/') or request.path.endswith(('.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg')):
         response.cache_control.max_age = 300
         response.cache_control.public = True
-    # No cache para páginas dinámicas
+        response.cache_control.s_maxage = 300
+    # Cache corto para páginas principales (1 minuto)
+    elif request.path in ['/', '/iniciopy', '/registrow']:
+        response.cache_control.max_age = 60
+        response.cache_control.public = True
+    # No cache para páginas dinámicas y API
     else:
         response.cache_control.no_cache = True
         response.cache_control.no_store = True
         response.cache_control.must_revalidate = True
     
+    # Seguridad básica
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    
     return response
 
 # ==================== INICIAR APLICACIÓN ====================
 if __name__ == "__main__":
-    # Configuración optimizada para producción
+    # Configuración OPTIMIZADA para producción
     port = int(os.environ.get("PORT", 5000))
     
-    # OPCIONES OPTIMIZADAS:
-    # - debug=False: No mostrar errores detallados en producción
+    print("=" * 50)
+    print("🚀 Iniciando CineTec")
+    print(f"📊 Puerto: {port}")
+    print(f"🔗 Health Check: http://localhost:{port}/health")
+    print(f"🔗 Estado: http://localhost:{port}/status")
+    print("=" * 50)
+    
+    # OPCIONES DE PRODUCCIÓN:
+    # - debug=False: No mostrar errores detallados (más seguro y rápido)
     # - threaded=True: Atender múltiples solicitudes simultáneamente
-    # - use_reloader=False: Evitar doble inicio en producción
+    # - use_reloader=False: Evitar doble inicio (problemas en Render)
     app.run(
-        host="0.0.0.0", 
-        port=port, 
-        debug=False,        # ← IMPORTANTE: False en producción
-        threaded=True,      # ← Mejora concurrencia
-        use_reloader=False  # ← Evita problemas en Render
+        host="0.0.0.0",      # Aceptar conexiones de cualquier IP
+        port=port,           # Puerto definido por Render o 5000
+        debug=False,         # IMPORTANTE: False en producción
+        threaded=True,       # Mejor concurrencia
+        use_reloader=False   # Evita problemas en servicios como Render
     )
