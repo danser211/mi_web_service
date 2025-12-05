@@ -13,6 +13,17 @@ load_dotenv()  # Cargar variables del archivo .env
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "clave_secreta_por_defecto")
 
+# ==================== CLASE DUMMY DB PARA FALLBACK ====================
+class DummyDB:
+    def find_one(self, *args, **kwargs): 
+        return None
+    def insert_one(self, *args, **kwargs): 
+        return type('obj', (object,), {'inserted_id': 'dummy'})()
+    def update_one(self, *args, **kwargs): 
+        return type('obj', (object,), {'matched_count': 0})()
+    def count_documents(self, *args, **kwargs):
+        return 0
+
 # ==================== CONEXIÓN MONGODB ====================
 try:
     mongodb_uri = os.getenv("MONGODB_URI")
@@ -26,39 +37,44 @@ try:
     
     db = client.registro
     usuarios_collection = db.usuarios
+    mongo_disponible = True
     
 except Exception as e:
     print(f"❌ Error conectando a MongoDB: {e}")
-    # Crear una colección dummy para desarrollo si MongoDB falla
-    class DummyDB:
-        def find_one(self, *args, **kwargs): return None
-        def insert_one(self, *args, **kwargs): return type('obj', (object,), {'inserted_id': 'dummy'})
-        def update_one(self, *args, **kwargs): return None
+    print("⚠️ Usando base de datos dummy para desarrollo")
     usuarios_collection = DummyDB()
+    mongo_disponible = False
 
 # ==================== HEALTH CHECK ====================
 @app.route("/health")
 def health():
     """Endpoint para verificar que la app está funcionando"""
     try:
-        # Verificar conexión a MongoDB
-        if isinstance(usuarios_collection, DummyDB):
-            raise ConnectionError("MongoDB no disponible")
+        if not mongo_disponible:
+            return jsonify({
+                "status": "degraded",
+                "message": "Aplicación funcionando pero MongoDB no disponible",
+                "timestamp": datetime.now().isoformat(),
+                "database": "disconnected",
+                "mode": "development"
+            }), 200
         
+        # Verificar conexión a MongoDB
         client.admin.command('ping')
         return jsonify({
             "status": "healthy",
             "message": "Aplicación funcionando correctamente",
             "timestamp": datetime.now().isoformat(),
             "database": "connected",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "mode": "production"
         }), 200
     except Exception as e:
         return jsonify({
             "status": "unhealthy",
-            "message": f"Error: {str(e)}",
+            "message": f"Error en la aplicación: {str(e)}",
             "timestamp": datetime.now().isoformat(),
-            "database": "disconnected"
+            "database": "error"
         }), 500
 
 # ==================== RUTAS PRINCIPALES ====================
@@ -84,6 +100,10 @@ def pelispy():
 # ==================== REGISTRO DE USUARIO ====================
 @app.route("/register", methods=["POST"])
 def register():
+    if not mongo_disponible:
+        flash("Base de datos no disponible temporalmente", "error")
+        return redirect(url_for('registrow'))
+    
     usuario = request.form.get("usuario")
     nombre = request.form.get("nombre")
     email = request.form.get("email")
@@ -144,6 +164,10 @@ def register():
 # ==================== INICIO DE SESIÓN ====================
 @app.route("/login", methods=["POST"])
 def login():
+    if not mongo_disponible:
+        flash("Base de datos no disponible temporalmente", "error")
+        return redirect(url_for('iniciopy'))
+    
     usuario = request.form.get("usuario")
     password = request.form.get("password")
     
@@ -179,6 +203,10 @@ def update_status():
         flash("Debes iniciar sesión primero", "error")
         return redirect(url_for('iniciopy'))
     
+    if not mongo_disponible:
+        flash("Base de datos no disponible", "error")
+        return redirect(url_for('pelispy'))
+    
     nueva_descripcion = request.form.get("descripcion")
     if nueva_descripcion and len(nueva_descripcion.strip()) > 0:
         try:
@@ -199,6 +227,10 @@ def update_profile_pic():
     if 'usuario' not in session:
         flash("Debes iniciar sesión primero", "error")
         return redirect(url_for('iniciopy'))
+    
+    if not mongo_disponible:
+        flash("Base de datos no disponible", "error")
+        return redirect(url_for('pelispy'))
     
     nueva_foto = request.form.get("foto_url")
     if nueva_foto and nueva_foto.startswith(('http://', 'https://')):
@@ -230,6 +262,9 @@ def api_usuarios():
     if 'usuario' not in session:
         return jsonify({"error": "No autorizado"}), 401
     
+    if not mongo_disponible:
+        return jsonify({"error": "Base de datos no disponible"}), 503
+    
     try:
         usuarios = list(usuarios_collection.find({}, {
             "_id": 0,
@@ -253,13 +288,14 @@ def api_usuarios():
 def status():
     """Página para ver el estado del sistema"""
     try:
-        total_usuarios = usuarios_collection.count_documents({}) if not isinstance(usuarios_collection, DummyDB) else 0
+        total_usuarios = usuarios_collection.count_documents({}) if mongo_disponible else 0
         return jsonify({
             "app": "CineTec",
             "status": "running",
-            "database": "connected" if not isinstance(usuarios_collection, DummyDB) else "disconnected",
+            "database": "connected" if mongo_disponible else "disconnected",
             "total_usuarios": total_usuarios,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "mongo_disponible": mongo_disponible
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -319,6 +355,7 @@ if __name__ == "__main__":
     print("=" * 50)
     print("🚀 Iniciando CineTec")
     print(f"📊 Puerto: {port}")
+    print(f"✅ MongoDB: {'CONECTADO' if mongo_disponible else 'DESCONECTADO'}")
     print(f"🔗 Health Check: http://localhost:{port}/health")
     print(f"🔗 Estado: http://localhost:{port}/status")
     print("=" * 50)
