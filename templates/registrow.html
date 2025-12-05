@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #f5576c;
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(245, 87, 108, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 25px;
+        }
+        
+        .links a {
+            color: #f5576c;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .links a:hover {
+            color: #f093fb;
+            text-decoration: underline;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .requirements {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+            padding-left: 5px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h2 {
+            color: #f5576c;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h2>🎬 CinePlus</h2>
+        </div>
+        
+        <h1>Crear Cuenta</h1>
+        <p class="subtitle">Regístrate para guardar tus películas favoritas</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="/register" method="POST" onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="usuario">Usuario *</label>
+                <input type="text" id="usuario" name="usuario" required 
+                       placeholder="Ej: juan123" 
+                       oninput="validateUsername(this)">
+                <div class="requirements">Solo letras y números (sin espacios)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="nombre">Nombre Completo *</label>
+                <input type="text" id="nombre" name="nombre" required 
+                       placeholder="Ej: Juan Pérez" 
+                       oninput="validateName(this)">
+                <div class="requirements">Solo letras y espacios</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Correo Electrónico *</label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="ejemplo@correo.com">
+                <div class="requirements">Debe contener @ y dominio válido</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Contraseña *</label>
+                <div class="password-container">
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Mínimo 8 caracteres" 
+                           oninput="validatePassword(this)">
+                    <button type="button" class="toggle-password" onclick="togglePassword()">
+                        👁️ Mostrar
+                    </button>
+                </div>
+                <div class="requirements" id="password-strength"></div>
+            </div>
+            
+            <button type="submit" class="btn">Registrarse</button>
+        </form>
+        
+        <div class="links">
+            <p>¿Ya tienes cuenta? <a href="/iniciopy">Inicia sesión aquí</a></p>
+            <p><a href="/">← Volver al inicio</a></p>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.querySelector('.toggle-password');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '🙈 Ocultar';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '👁️ Mostrar';
+            }
+        }
+        
+        function validateUsername(input) {
+            const username = input.value;
+            const regex = /^[a-zA-Z0-9]+$/;
+            
+            if (!regex.test(username) && username !== '') {
+                input.style.borderColor = '#f5576c';
+            } else {
+                input.style.borderColor = '#e1e1e1';
+            }
+        }
+        
+        function validateName(input) {
+            const name = input.value;
+            const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+            
+            if (!regex.test(name) && name !== '') {
+                input.style.borderColor = '#f5576c';
+            } else {
+                input.style.borderColor = '#e1e1e1';
+            }
+        }
+        
+        function validatePassword(input) {
+            const password = input.value;
+            const strengthDiv = document.getElementById('password-strength');
+            
+            let strength = 0;
+            let feedback = '';
+            
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            if (password.length === 0) {
+                feedback = '';
+                input.style.borderColor = '#e1e1e1';
+            } else if (password.length < 8) {
+                feedback = '❌ Muy corta (mínimo 8 caracteres)';
+                input.style.borderColor = '#f5576c';
+            } else if (strength === 1) {
+                feedback = '⚠️ Débil - añade mayúsculas y números';
+                input.style.borderColor = '#ff9800';
+            } else if (strength === 2) {
+                feedback = '⚠️ Media - añade caracteres especiales';
+                input.style.borderColor = '#ff9800';
+            } else if (strength === 3) {
+                feedback = '✅ Buena';
+                input.style.borderColor = '#4CAF50';
+            } else if (strength === 4) {
+                feedback = '✅ Excelente!';
+                input.style.borderColor = '#4CAF50';
+            }
+            
+            strengthDiv.textContent = feedback;
+        }
+        
+        function validateForm() {
+            const password = document.getElementById('password').value;
+            const nombre = document.getElementById('nombre').value;
+            const usuario = document.getElementById('usuario').value;
+            
+            // Validar nombre solo letras
+            const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+            if (!nameRegex.test(nombre)) {
+                alert('El nombre solo puede contener letras y espacios');
+                return false;
+            }
+            
+            // Validar usuario sin espacios
+            const userRegex = /^[a-zA-Z0-9]+$/;
+            if (!userRegex.test(usuario)) {
+                alert('El usuario solo puede contener letras y números (sin espacios)');
+                return false;
+            }
+            
+            // Validar contraseña
+            if (password.length < 8) {
+                alert('La contraseña debe tener al menos 8 caracteres');
+                return false;
+            }
+            
+            return true;
+        }
+    </script>
+</body>
+</html>
