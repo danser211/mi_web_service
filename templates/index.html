@@ -16,8 +16,89 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #fff;
             min-height: 100vh;
+            position: relative;
         }
         
+        /* PANTALLA DE CARGA */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(229, 9, 20, 0.3);
+            border-top: 8px solid #e50914;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 24px;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .loading-subtext {
+            color: #ccc;
+            font-size: 16px;
+            text-align: center;
+            max-width: 300px;
+            line-height: 1.4;
+        }
+        
+        .loading-dots {
+            display: flex;
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        .loading-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e50914;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+        
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        /* CONTENIDO PRINCIPAL */
         .hero {
             background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
                         url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1925&q=80');
@@ -180,6 +261,10 @@
                 max-width: 300px;
                 justify-content: center;
             }
+            
+            .loading-text {
+                font-size: 20px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -194,65 +279,175 @@
             .features h2 {
                 font-size: 28px;
             }
+            
+            .loading-spinner {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .loading-text {
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- SECCIÓN HERO -->
-    <section class="hero">
-        <div class="logo">
-            <span>🎬</span>
-            <div>CineTec</div>
+    <!-- PANTALLA DE CARGA -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Cargando CineTec</div>
+        <div class="loading-subtext">
+            Si la página tarda en cargar, Render está "despertando" el servidor. Esto puede tomar hasta 30 segundos.
         </div>
-        
-        <h1>Tu plataforma de películas favorita</h1>
-        <p class="subtitle">Descubre, califica y guarda tus películas favoritas. Únete a nuestra comunidad cinéfila y comparte tus recomendaciones.</p>
-        
-        <div class="buttons">
-            <a href="/iniciopy">
-                <button class="btn btn-primary">
-                    <span>🚀</span> Iniciar Sesión
-                </button>
-            </a>
-            
-            <a href="/registrow">
-                <button class="btn btn-secondary">
-                    <span>✨</span> Crear Cuenta
-                </button>
-            </a>
+        <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
-    </section>
+    </div>
     
-    <!-- SECCIÓN DE CARACTERÍSTICAS -->
-    <section class="features">
-        <h2>¿Por qué elegir CineTec?</h2>
+    <!-- CONTENIDO PRINCIPAL (oculto al inicio) -->
+    <div id="mainContent" style="display: none;">
+        <!-- SECCIÓN HERO -->
+        <section class="hero">
+            <div class="logo">
+                <span>🎬</span>
+                <div>CineTec</div>
+            </div>
+            
+            <h1>Tu plataforma de películas favorita</h1>
+            <p class="subtitle">Descubre, califica y guarda tus películas favoritas. Únete a nuestra comunidad cinéfila y comparte tus recomendaciones.</p>
+            
+            <div class="buttons">
+                <a href="/iniciopy">
+                    <button class="btn btn-primary">
+                        <span>🚀</span> Iniciar Sesión
+                    </button>
+                </a>
+                
+                <a href="/registrow">
+                    <button class="btn btn-secondary">
+                        <span>✨</span> Crear Cuenta
+                    </button>
+                </a>
+            </div>
+        </section>
         
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🎥</div>
-                <h3>Catálogo Exclusivo</h3>
-                <p>Accede a más de 20 películas cuidadosamente seleccionadas con información detallada y plataformas de streaming.</p>
-            </div>
+        <!-- SECCIÓN DE CARACTERÍSTICAS -->
+        <section class="features">
+            <h2>¿Por qué elegir CineTec?</h2>
             
-            <div class="feature-card">
-                <div class="feature-icon">⭐</div>
-                <h3>Calificación Personal</h3>
-                <p>Califica cada película con un sistema de 5 estrellas y guarda tus favoritos para verlos después.</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎥</div>
+                    <h3>Catálogo Exclusivo</h3>
+                    <p>Accede a más de 20 películas cuidadosamente seleccionadas con información detallada y plataformas de streaming.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <h3>Calificación Personal</h3>
+                    <p>Califica cada película con un sistema de 5 estrellas y guarda tus favoritos para verlos después.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h3>Perfil Personalizado</h3>
+                    <p>Crea tu perfil, sube una foto, actualiza tu estado y lleva un registro de tus películas vistas.</p>
+                </div>
             </div>
+        </section>
+        
+        <!-- FOOTER -->
+        <footer>
+            <p>🎬 CineTec - Tu plataforma cinéfila favorita</p>
+            <p>Desarrollado con Python, Flask y MongoDB</p>
+            <p>© 2025 - Todos los derechos reservados</p>
+        </footer>
+    </div>
+
+    <script>
+        // PANTALLA DE CARGA INTELIGENTE
+        
+        // Mostrar contenido principal después de 2 segundos (si todo cargó bien)
+        setTimeout(function() {
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('loadingOverlay').classList.add('hidden');
             
-            <div class="feature-card">
-                <div class="feature-icon">👤</div>
-                <h3>Perfil Personalizado</h3>
-                <p>Crea tu perfil, sube una foto, actualiza tu estado y lleva un registro de tus películas vistas.</p>
-            </div>
-        </div>
-    </section>
-    
-    <!-- FOOTER -->
-    <footer>
-        <p>🎬 CineTec - Tu plataforma cinéfila favorita</p>
-        <p>Desarrollado con Python, Flask y MongoDB</p>
-        <p>© 2025 - Todos los derechos reservados</p>
-    </footer>
+            // Ocultar completamente después de la animación
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 500);
+        }, 2000);
+        
+        // DETECTOR DE RENDER "DURMIENDO"
+        // Si la página tarda más de 8 segundos en responder, Render está "despertando"
+        let renderSleeping = false;
+        
+        setTimeout(function() {
+            // Verificar si hay elementos críticos cargados
+            const heroSection = document.querySelector('.hero');
+            const buttons = document.querySelector('.buttons');
+            
+            if (!heroSection || !buttons || heroSection.children.length === 0) {
+                renderSleeping = true;
+                showRenderWakeupMessage();
+            }
+        }, 8000); // 8 segundos
+        
+        function showRenderWakeupMessage() {
+            const loadingText = document.querySelector('.loading-text');
+            const loadingSubtext = document.querySelector('.loading-subtext');
+            
+            if (loadingText && loadingSubtext) {
+                loadingText.textContent = "⏰ Render está 'despertando'...";
+                loadingSubtext.textContent = "El servidor gratuito se duerme por inactividad. Debe 'despertar', esto toma 30-60 segundos. La página se recargará automáticamente.";
+                
+                // Mostrar contador
+                let countdown = 10;
+                const countdownInterval = setInterval(function() {
+                    loadingSubtext.textContent = `Recargando en ${countdown} segundos...`;
+                    countdown--;
+                    
+                    if (countdown < 0) {
+                        clearInterval(countdownInterval);
+                        location.reload();
+                    }
+                }, 1000);
+            }
+        }
+        
+        // DETECTAR CONEXIÓN LENTA
+        window.addEventListener('load', function() {
+            const loadTime = window.performance.timing.domContentLoadedEventEnd - 
+                           window.performance.timing.navigationStart;
+            
+            console.log('Tiempo de carga:', loadTime + 'ms');
+            
+            if (loadTime > 10000) { // Más de 10 segundos
+                // Mostrar sugerencia para próxima visita
+                localStorage.setItem('cineplus_slow_load', 'true');
+            }
+        });
+        
+        // SUGERENCIA PARA VISITAS FUTURAS
+        if (localStorage.getItem('cineplus_slow_load') === 'true') {
+            setTimeout(function() {
+                const subtext = document.querySelector('.loading-subtext');
+                if (subtext && !renderSleeping) {
+                    subtext.innerHTML = '💡 <strong>Consejo:</strong> Para cargas más rápidas, visita cada 10-15 minutos para mantener el servidor activo.';
+                }
+            }, 3000);
+        }
+        
+        // AUTO-REFRESH SI LA PÁGINA ESTÁ MUY LENTA
+        setTimeout(function() {
+            // Si después de 15 segundos no se cargó nada
+            if (document.querySelector('.hero').children.length === 0 && !renderSleeping) {
+                console.log('Página muy lenta, recargando...');
+                location.reload();
+            }
+        }, 15000); // 15 segundos
+    </script>
 </body>
 </html>
