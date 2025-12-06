@@ -453,24 +453,18 @@ def add_header(response):
 
 # ==================== INICIAR APLICACIÓN OPTIMIZADO PARA RENDER ====================
 if __name__ == "__main__":
-    # Configuración OPTIMIZADA para Render
-    port = int(os.environ.get("PORT", 10000))  # Render usa puerto 10000
+    port = int(os.environ.get("PORT", 10000))
     
-    print("=" * 60)
-    print("🚀 INICIANDO CINETEC - VERSIÓN COMPATIBLE CON RENDER")
-    print("=" * 60)
-    print(f"📊 Puerto: {port}")
-    print(f"✅ MongoDB: {'CONECTADO' if mongo_disponible else 'DESCONECTADO'}")
-    print(f"🐍 Python: {os.environ.get('PYTHON_VERSION', 'Sistema')}")
-    print(f"🔗 Health Check: http://localhost:{port}/health")
-    print("=" * 60)
-    
-    # ⚡ CONFIGURACIÓN ESPECIAL PARA RENDER:
-    # Render NO usa gunicorn desde el código, lo configura automáticamente
-    # Por eso usamos app.run normal pero con los parámetros de Render
-    app.run(
-        host="0.0.0.0",      # Aceptar conexiones de cualquier IP
-        port=port,           # Puerto 10000 que usa Render
-        debug=False,         # IMPORTANTE: False en producción
-        threaded=True        # Atender múltiples solicitudes
-    )
+    # Si estamos en Render, usar gunicorn automáticamente
+    if os.environ.get("RENDER"):
+        # Render ya maneja gunicorn automáticamente
+        print("🚀 Iniciando en Render (gunicorn automático)...")
+    else:
+        # Desarrollo local
+        print("💻 Iniciando servidor local...")
+        app.run(
+            host="0.0.0.0",
+            port=port,
+            debug=False,
+            threaded=True
+        )
