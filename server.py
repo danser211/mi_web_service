@@ -454,34 +454,23 @@ def add_header(response):
 # ==================== INICIAR APLICACIÓN OPTIMIZADO PARA RENDER ====================
 if __name__ == "__main__":
     # Configuración OPTIMIZADA para Render
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))  # Render usa puerto 10000
     
     print("=" * 60)
-    print("🚀 INICIANDO CINETEC - VERSIÓN OPTIMIZADA PARA RENDER")
+    print("🚀 INICIANDO CINETEC - VERSIÓN COMPATIBLE CON RENDER")
     print("=" * 60)
     print(f"📊 Puerto: {port}")
     print(f"✅ MongoDB: {'CONECTADO' if mongo_disponible else 'DESCONECTADO'}")
-    if mongo_disponible:
-        print(f"📈 Pool de conexiones: 2-10 conexiones simultáneas")
-        print(f"⚡ Timeouts: Conectar=15s, Operaciones=20s")
+    print(f"🐍 Python: {os.environ.get('PYTHON_VERSION', 'Sistema')}")
     print(f"🔗 Health Check: http://localhost:{port}/health")
-    print(f"🔗 Estado del sistema: http://localhost:{port}/status")
-    print("=" * 60)
-    print("✨ Configuración aplicada:")
-    print("   • TLS/SSL habilitado con certificados")
-    print("   • Pool de conexiones optimizado para Render")
-    print("   • Timeouts aumentados para red de Render")
-    print("   • Caché extendido para archivos estáticos")
     print("=" * 60)
     
-    # ⚡ CONFIGURACIÓN DE PRODUCCIÓN PARA RENDER:
+    # ⚡ CONFIGURACIÓN ESPECIAL PARA RENDER:
+    # Render NO usa gunicorn desde el código, lo configura automáticamente
+    # Por eso usamos app.run normal pero con los parámetros de Render
     app.run(
         host="0.0.0.0",      # Aceptar conexiones de cualquier IP
-        port=port,           # Puerto definido por Render
+        port=port,           # Puerto 10000 que usa Render
         debug=False,         # IMPORTANTE: False en producción
-        threaded=True,       # Atender múltiples solicitudes
-        use_reloader=False,  # Evitar problemas en Render
-        # ⚡ Nuevos parámetros para mejor rendimiento:
-        processes=1,         # Usar 1 proceso (Render maneja la escalabilidad)
-        load_dotenv=False    # Ya cargamos .env al inicio
+        threaded=True        # Atender múltiples solicitudes
     )
