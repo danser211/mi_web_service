@@ -1,11 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from pymongo import MongoClient, ReturnDocument
+from pymongo import MongoClient
 from bson import ObjectId
 import os
 from datetime import datetime
 import hashlib
 import base64
-from werkzeug.utils import secure_filename
 import re
 
 # ==================== CONFIGURACIÓN ====================
@@ -14,8 +13,6 @@ app.secret_key = os.getenv("SECRET_KEY", "clave_temporal_123")
 
 # Configuración para subir imágenes
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-UPLOAD_FOLDER = 'static/uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -34,62 +31,6 @@ def get_mongo_client():
     except Exception as e:
         print(f"❌ Error de conexión MongoDB: {e}")
         return None
-
-def init_database():
-    """Inicializar la base de datos si no existe"""
-    client = get_mongo_client()
-    if client:
-        db = client.cineTecDB
-        
-        # Crear colecciones si no existen
-        collections = db.list_collection_names()
-        
-        if 'usuarios' not in collections:
-            db.create_collection('usuarios')
-            print("✅ Colección 'usuarios' creada")
-        
-        if 'peliculas' not in collections:
-            db.create_collection('peliculas')
-            print("✅ Colección 'peliculas' creada")
-            
-            # Insertar películas de ejemplo
-            peliculas_ejemplo = get_peliculas_ejemplo()
-            db.peliculas.insert_many(peliculas_ejemplo)
-            print("✅ Películas de ejemplo insertadas")
-        
-        if 'comentarios' not in collections:
-            db.create_collection('comentarios')
-            print("✅ Colección 'comentarios' creada")
-        
-        if 'calificaciones' not in collections:
-            db.create_collection('calificaciones')
-            print("✅ Colección 'calificaciones' creada")
-        
-        client.close()
-        return True
-    return False
-
-def get_peliculas_ejemplo():
-    """Datos de ejemplo para películas"""
-    return [
-        {
-            "titulo": "El Resplandor",
-            "descripcion": "Un escritor acepta un trabajo de cuidador en un hotel aislado durante el invierno, donde su cordura se desmorona lentamente.",
-            "plataforma": "Amazon Prime",
-            "portada": "https://image.tmdb.org/t/p/w300/9O7gLzmreU0nGkIB6K3BsJbzvNv.jpg",
-            "calificacion_promedio": 0,
-            "total_calificaciones": 0
-        },
-        {
-            "titulo": "El Padrino",
-            "descripcion": "La saga de la familia Corleone, una poderosa dinastía de la mafia italiana en Nueva York.",
-            "plataforma": "Netflix",
-            "portada": "https://image.tmdb.org/t/p/w300/3Tf8vXykYhzHdT0BtsYTp570JGQ.jpg",
-            "calificacion_promedio": 0,
-            "total_calificaciones": 0
-        },
-        # ... (agrega las otras 18 películas similares)
-    ]
 
 # ==================== FUNCIONES AUXILIARES ====================
 def hash_password(password):
@@ -124,6 +65,7 @@ def iniciopy():
 def registrow():
     return render_template("registrow.html")
 
+# ==================== PELISPY - CORREGIDA ====================
 @app.route("/pelispy")
 def pelispy():
     if 'usuario' not in session:
@@ -134,46 +76,68 @@ def pelispy():
     if client:
         db = client.cineTecDB
         
-        # Obtener datos del usuario
+        # Obtener datos COMPLETOS del usuario desde MongoDB
         usuario_data = db.usuarios.find_one({"usuario": session['usuario']})
         
-        # Obtener películas
+        if not usuario_data:
+            flash("Usuario no encontrado", "error")
+            return redirect(url_for('logout'))
+        
+        # Obtener el estado actual del usuario (si no tiene, usar el predeterminado)
+        descripcion_actual = usuario_data.get('descripcion', 'Hola, soy nuevo en CineTec')
+        foto_actual = usuario_data.get('foto_perfil', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png')
+        favoritos_actual = usuario_data.get('favoritos', [])
+        
+        # Guardar en la sesión para que esté disponible en la plantilla
+        session['descripcion'] = descripcion_actual
+        session['foto_perfil'] = foto_actual
+        session['favoritos'] = favoritos_actual
+        
+        # Obtener todas las películas
         peliculas = list(db.peliculas.find())
         
         # Obtener calificaciones del usuario
         calificaciones_usuario = {}
-        calificaciones = db.calificaciones.find({"usuario": session['usuario']})
-        for cal in calificaciones:
+        calificaciones_db = db.calificaciones.find({"usuario": session['usuario']})
+        for cal in calificaciones_db:
             calificaciones_usuario[cal['pelicula']] = cal['calificacion']
         
-        # Obtener películas favoritas del usuario
-        favoritos_usuario = usuario_data.get('favoritos', []) if usuario_data else []
-        
-        # Obtener comentarios para cada película
-        peliculas_con_comentarios = []
+        # Obtener calificaciones promedio de todas las películas
+        promedios = {}
+        total_votos = {}
         for pelicula in peliculas:
-            comentarios = list(db.comentarios.find({"pelicula": pelicula['titulo']}).sort("fecha", -1).limit(5))
-            peliculas_con_comentarios.append({
-                **pelicula,
-                'comentarios': comentarios,
+            promedios[pelicula['titulo']] = pelicula.get('calificacion_promedio', 0)
+            total_votos[pelicula['titulo']] = pelicula.get('total_calificaciones', 0)
+        
+        # Procesar cada película con sus datos
+        peliculas_con_datos = []
+        for pelicula in peliculas:
+            peliculas_con_datos.append({
+                'titulo': pelicula['titulo'],
+                'descripcion': pelicula.get('descripcion', ''),
+                'plataforma': pelicula.get('plataforma', ''),
+                'portada': pelicula.get('portada', ''),
+                'calificacion_promedio': pelicula.get('calificacion_promedio', 0),
+                'total_calificaciones': pelicula.get('total_calificaciones', 0),
                 'calificacion_usuario': calificaciones_usuario.get(pelicula['titulo'], 0),
-                'es_favorita': pelicula['titulo'] in favoritos_usuario
+                'es_favorita': pelicula['titulo'] in favoritos_actual
             })
         
         client.close()
         
         return render_template("pelispy.html", 
-                             usuario=session.get('usuario'),
-                             descripcion=usuario_data.get('descripcion', ''),
-                             foto_perfil=usuario_data.get('foto_perfil', ''),
-                             peliculas=peliculas_con_comentarios)
+                             usuario=session['usuario'],
+                             descripcion=descripcion_actual,
+                             foto_perfil=foto_actual,
+                             peliculas=peliculas_con_datos,
+                             promedios=promedios,
+                             total_votos=total_votos)
     
     flash("Error de conexión a la base de datos", "error")
     return redirect(url_for('iniciopy'))
 
 @app.route("/health")
 def health_check():
-    """Endpoint para verificar que el servidor funciona"""
     return jsonify({"status": "ok", "message": "Servidor funcionando"}), 200
 
 # ==================== REGISTRO ====================
@@ -275,6 +239,9 @@ def login():
             session['usuario'] = usuario_data["usuario"]
             session['nombre'] = usuario_data["nombre"]
             session['user_id'] = str(usuario_data["_id"])
+            session['descripcion'] = usuario_data.get('descripcion', 'Hola, soy nuevo en CineTec')
+            session['foto_perfil'] = usuario_data.get('foto_perfil', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png')
+            session['favoritos'] = usuario_data.get('favoritos', [])
             
             flash(f"¡Bienvenido {usuario_data['nombre']}!", "success")
             client.close()
@@ -289,7 +256,7 @@ def login():
         flash(f"Error en el inicio de sesión: {str(e)}", "error")
         return redirect(url_for('iniciopy'))
 
-# ==================== ACTUALIZAR PERFIL ====================
+# ==================== ACTUALIZAR PERFIL - CORREGIDA ====================
 @app.route("/update_profile", methods=["POST"])
 def update_profile():
     if 'usuario' not in session:
@@ -297,73 +264,109 @@ def update_profile():
     
     descripcion = request.form.get("descripcion", "").strip()
     
+    if not descripcion:
+        return jsonify({"error": "El estado no puede estar vacío"}), 400
+    
     client = get_mongo_client()
     if not client:
-        return jsonify({"error": "Error de conexión"}), 500
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
     
     try:
         db = client.cineTecDB
         
-        # Actualizar descripción
-        db.usuarios.update_one(
+        # Actualizar descripción en la base de datos
+        resultado = db.usuarios.update_one(
             {"usuario": session['usuario']},
             {"$set": {"descripcion": descripcion}}
         )
         
-        client.close()
-        return jsonify({"success": True, "message": "Perfil actualizado"})
+        if resultado.modified_count > 0:
+            # Actualizar también en la sesión
+            session['descripcion'] = descripcion
+            
+            client.close()
+            return jsonify({
+                "success": True, 
+                "message": "Estado actualizado correctamente",
+                "descripcion": descripcion
+            })
+        else:
+            client.close()
+            return jsonify({
+                "success": False, 
+                "message": "No se pudo actualizar el estado"
+            })
         
     except Exception as e:
         client.close()
         return jsonify({"error": str(e)}), 500
 
-# ==================== SUBIR FOTO ====================
+# ==================== SUBIR FOTO - CORREGIDA ====================
 @app.route("/upload_photo", methods=["POST"])
 def upload_photo():
     if 'usuario' not in session:
         return jsonify({"error": "No autorizado"}), 401
     
     if 'foto' not in request.files:
-        return jsonify({"error": "No se envió archivo"}), 400
+        return jsonify({"error": "No se envió ningún archivo"}), 400
     
     file = request.files['foto']
     
     if file.filename == '':
-        return jsonify({"error": "No se seleccionó archivo"}), 400
+        return jsonify({"error": "No se seleccionó ningún archivo"}), 400
     
     if file and allowed_file(file.filename):
         try:
-            # Convertir imagen a base64 para guardar en MongoDB
+            # Leer el archivo de imagen
             file_data = file.read()
+            
+            # Verificar que sea una imagen válida
+            if len(file_data) == 0:
+                return jsonify({"error": "El archivo está vacío"}), 400
+            
+            if len(file_data) > 5 * 1024 * 1024:  # 5MB máximo
+                return jsonify({"error": "La imagen es demasiado grande (máximo 5MB)"}), 400
+            
+            # Convertir a base64
             foto_base64 = base64.b64encode(file_data).decode('utf-8')
+            foto_url = f"data:image/jpeg;base64,{foto_base64}"
             
             client = get_mongo_client()
             if not client:
-                return jsonify({"error": "Error de conexión"}), 500
+                return jsonify({"error": "Error de conexión a la base de datos"}), 500
             
             db = client.cineTecDB
             
-            # Guardar en MongoDB como string base64
-            db.usuarios.update_one(
+            # Guardar en MongoDB
+            resultado = db.usuarios.update_one(
                 {"usuario": session['usuario']},
                 {"$set": {
-                    "foto_perfil": f"data:image/jpeg;base64,{foto_base64}",
+                    "foto_perfil": foto_url,
                     "foto_actualizada": datetime.now()
                 }}
             )
             
-            client.close()
-            
-            return jsonify({
-                "success": True, 
-                "message": "Foto actualizada",
-                "foto_url": f"data:image/jpeg;base64,{foto_base64}"
-            })
+            if resultado.modified_count > 0:
+                # Actualizar también en la sesión
+                session['foto_perfil'] = foto_url
+                
+                client.close()
+                return jsonify({
+                    "success": True, 
+                    "message": "Foto de perfil actualizada correctamente",
+                    "foto_url": foto_url
+                })
+            else:
+                client.close()
+                return jsonify({
+                    "success": False, 
+                    "message": "No se pudo actualizar la foto de perfil"
+                })
             
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": f"Error al procesar la imagen: {str(e)}"}), 500
     
-    return jsonify({"error": "Formato de archivo no permitido"}), 400
+    return jsonify({"error": "Formato de archivo no permitido. Solo se permiten: PNG, JPG, JPEG, GIF"}), 400
 
 # ==================== CALIFICAR PELÍCULA ====================
 @app.route("/rate_movie", methods=["POST"])
@@ -413,6 +416,7 @@ def rate_movie():
             total = sum(c['calificacion'] for c in calificaciones)
             promedio = total / len(calificaciones)
             
+            # Actualizar la película
             db.peliculas.update_one(
                 {"titulo": pelicula},
                 {
@@ -422,19 +426,28 @@ def rate_movie():
                     }
                 }
             )
+            
+            # Obtener el promedio actualizado
+            pelicula_data = db.peliculas.find_one({"titulo": pelicula})
+            promedio_actual = pelicula_data.get('calificacion_promedio', 0)
+            total_votos = pelicula_data.get('total_calificaciones', 0)
+        else:
+            promedio_actual = 0
+            total_votos = 0
         
         client.close()
         return jsonify({
             "success": True, 
             "message": "Calificación guardada",
-            "promedio": promedio if 'promedio' in locals() else 0
+            "promedio": promedio_actual,
+            "total_votos": total_votos
         })
         
     except Exception as e:
         client.close()
         return jsonify({"error": str(e)}), 500
 
-# ==================== AGREGAR/QUITAR FAVORITOS ====================
+# ==================== AGREGAR/QUITAR FAVORITOS - CORREGIDA ====================
 @app.route("/toggle_favorite", methods=["POST"])
 def toggle_favorite():
     if 'usuario' not in session:
@@ -453,33 +466,138 @@ def toggle_favorite():
     try:
         db = client.cineTecDB
         
+        # Obtener el usuario actual
         usuario = db.usuarios.find_one({"usuario": session['usuario']})
+        if not usuario:
+            client.close()
+            return jsonify({"error": "Usuario no encontrado"}), 404
+        
         favoritos = usuario.get('favoritos', [])
         
-        if pelicula in favoritos:
-            # Quitar de favoritos
-            favoritos.remove(pelicula)
-            mensaje = "Película eliminada de favoritos"
-        else:
-            # Agregar a favoritos
-            favoritos.append(pelicula)
-            mensaje = "Película agregada a favoritos"
+        # Determinar si la película ya es favorita
+        es_favorita_actualmente = pelicula in favoritos
         
+        if es_favorita_actualmente:
+            # Si YA es favorita, la QUITAMOS
+            favoritos.remove(pelicula)
+            mensaje = f'"{pelicula}" eliminada de favoritos'
+            nueva_es_favorita = False
+        else:
+            # Si NO es favorita, la AGREGAMOS
+            favoritos.append(pelicula)
+            mensaje = f'"{pelicula}" agregada a favoritos'
+            nueva_es_favorita = True
+        
+        # Actualizar en la base de datos
         db.usuarios.update_one(
             {"usuario": session['usuario']},
             {"$set": {"favoritos": favoritos}}
         )
         
+        # Actualizar en la sesión
+        session['favoritos'] = favoritos
+        
         client.close()
         return jsonify({
             "success": True, 
             "message": mensaje,
-            "es_favorita": pelicula not in favoritos  # Estado después del cambio
+            "es_favorita": nueva_es_favorita
         })
         
     except Exception as e:
         client.close()
         return jsonify({"error": str(e)}), 500
+
+# ==================== OBTENER TODAS LAS CALIFICACIONES - NUEVA ====================
+@app.route("/get_all_ratings", methods=["GET"])
+def get_all_ratings():
+    client = get_mongo_client()
+    if not client:
+        return jsonify({"error": "Error de conexión"}), 500
+    
+    try:
+        db = client.cineTecDB
+        
+        # Obtener todas las películas con sus promedios
+        peliculas = list(db.peliculas.find({}, {
+            'titulo': 1,
+            'calificacion_promedio': 1,
+            'total_calificaciones': 1
+        }))
+        
+        ratings_data = {}
+        for pelicula in peliculas:
+            ratings_data[pelicula['titulo']] = {
+                'promedio': pelicula.get('calificacion_promedio', 0),
+                'total_votos': pelicula.get('total_calificaciones', 0)
+            }
+        
+        client.close()
+        return jsonify({
+            "success": True,
+            "ratings": ratings_data
+        })
+        
+    except Exception as e:
+        client.close()
+        return jsonify({"error": str(e)}), 500
+
+# ==================== OBTENER PELÍCULAS FAVORITAS - CORREGIDA ====================
+@app.route("/get_favorites", methods=["GET"])
+def get_favorites():
+    if 'usuario' not in session:
+        return jsonify({"error": "No autorizado"}), 401
+    
+    client = get_mongo_client()
+    if not client:
+        return jsonify({"error": "Error de conexión a la base de datos"}), 500
+    
+    try:
+        db = client.cineTecDB
+        
+        # Obtener usuario
+        usuario = db.usuarios.find_one({"usuario": session['usuario']})
+        if not usuario:
+            client.close()
+            return jsonify({"error": "Usuario no encontrado"}), 404
+        
+        favoritos = usuario.get('favoritos', [])
+        
+        if not favoritos:
+            client.close()
+            return jsonify({
+                "success": True,
+                "message": "No tienes películas favoritas",
+                "favoritas": []
+            })
+        
+        # Obtener información de cada película favorita
+        peliculas_favoritas = []
+        for titulo in favoritos:
+            pelicula = db.peliculas.find_one({"titulo": titulo})
+            if pelicula:
+                peliculas_favoritas.append({
+                    "titulo": pelicula["titulo"],
+                    "portada": pelicula.get("portada", ""),
+                    "calificacion_promedio": pelicula.get("calificacion_promedio", 0),
+                    "descripcion": pelicula.get("descripcion", ""),
+                    "plataforma": pelicula.get("plataforma", "")
+                })
+        
+        client.close()
+        return jsonify({
+            "success": True,
+            "message": f"Tienes {len(peliculas_favoritas)} películas favoritas",
+            "favoritas": peliculas_favoritas,
+            "total": len(peliculas_favoritas)
+        })
+        
+    except Exception as e:
+        client.close()
+        return jsonify({
+            "success": False,
+            "error": f"Error al obtener favoritos: {str(e)}"
+        }), 500
 
 # ==================== AGREGAR COMENTARIO ====================
 @app.route("/add_comment", methods=["POST"])
@@ -575,23 +693,15 @@ if __name__ == "__main__":
     print("🎬 INICIANDO CINETEC - SISTEMA DE PELÍCULAS")
     print("=" * 60)
     
-    # Inicializar base de datos
-    print("📊 Inicializando base de datos...")
-    if init_database():
-        print("✅ Base de datos inicializada correctamente")
-    else:
-        print("⚠️ No se pudo inicializar la base de datos")
-    
     port = int(os.environ.get("PORT", 10000))
     
     print(f"🌐 Servidor en: http://localhost:{port}")
     print(f"🔧 Puerto: {port}")
-    print(f"📁 Upload folder: {app.config['UPLOAD_FOLDER']}")
     print("=" * 60)
     
     app.run(
         host="0.0.0.0",
         port=port,
-        debug=False,
+        debug=True,
         threaded=True
     )

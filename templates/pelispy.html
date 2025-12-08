@@ -207,7 +207,7 @@
         
         .favorite-btn {
             width: 100%;
-            background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+            background: linear-gradient(135deg, #00008B 0%, #1a1a8b 100%); /* Azul fuerte */
             color: white;
             border: none;
             border-radius: 8px;
@@ -218,15 +218,19 @@
             justify-content: center;
             align-items: center;
             gap: 8px;
-            transition: transform 0.2s;
+            transition: transform 0.2s, background 0.3s;
+            border: 1px solid #FFD700; /* Borde amarillo */
         }
         
         .favorite-btn:hover {
             transform: scale(1.05);
+            background: linear-gradient(135deg, #FFD700 0%, #ffed4e 100%); /* Amarillo al hover */
+            color: #00008B; /* Texto azul al hover */
         }
         
         .favorite-btn.favorited {
-            background: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
+            background: linear-gradient(135deg, #FFD700 0%, #ffed4e 100%); /* Amarillo cuando es favorito */
+            color: #00008B; /* Texto azul cuando es favorito */
         }
         
         /* ESTILOS PARA COMENTARIOS */
@@ -429,6 +433,86 @@
             text-align: center;
             display: none;
         }
+        /* BOTÓN FAVORITOS */
+        .favorites-btn {
+            background: linear-gradient(135deg, #FFD700 0%, #ffed4e 100%);
+            color: #00008B;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid #00008B;
+        }
+
+        .favorites-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        /* MODAL FAVORITOS */
+        #favoritesModal .modal-content {
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        margin: 20px 0;
+        }
+
+        .favorite-movie-card {
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #FFD700;
+        }
+
+        .favorite-movie-poster {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .favorite-movie-info {
+            padding: 15px;
+        }
+
+        .favorite-movie-title {
+            font-size: 16px;
+            color: white;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .favorite-movie-platform {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .favorite-movie-rating {
+            color: #FFD700;
+            font-size: 14px;
+        }
+
+        .no-favorites {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+        
+        .favorites-count {
+            color: #FFD700;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -457,6 +541,11 @@
                     <button onclick="document.getElementById('imageUpload').click()" 
                             class="upload-btn">📷 Cambiar Foto</button>
                 </div>
+                <div class="favorites-section">
+                    <button onclick="showFavorites()" class="favorites-btn">
+                    ⭐ Mis Favoritas
+                    </button>
+                </div>
             </div>
             
             <a href="/logout">
@@ -475,7 +564,7 @@
         <div class="movies-grid">
             <!-- PELÍCULA 1 - El Resplandor -->
             <div class="movie-card">
-                <img src="https://image.tmdb.org/t/p/w300/9O7gLzmreU0nGkIB6K3BsJbzvNv.jpg" 
+                <img src="https://image.tmdb.org/t/p/w300/9O7gLzmreU0nGkIB6K3BsJbzvNv.jpg"
                      alt="El Resplandor" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Resplandor</h3>
@@ -645,8 +734,8 @@
             
             <!-- PELÍCULA 6 - Origen -->
             <div class="movie-card">
-                <img src="https://image.tmdb.org/t/p/w300/8IB2e4r4oVhH3HmIPL4tq4WY8g0.jpg" 
-                     alt="Origen" class="movie-poster">
+                <img src="https://image.tmdb.org/t/p/w300/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg" 
+                    alt="Origen" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Origen</h3>
                     <p class="movie-description">Un ladrón que roba secretos corporativos mediante el uso de tecnología para compartir sueños.</p>
@@ -747,8 +836,8 @@
             
             <!-- PELÍCULA 9 - Forrest Gump -->
             <div class="movie-card">
-                <img src="https://image.tmdb.org/t/p/w300/yE5d3BUhE8hCnkMUJOo1QDoOGNz.jpg" 
-                     alt="Forrest Gump" class="movie-poster">
+                <img src="https://image.tmdb.org/t/p/w300/saHP97rTPS5eLmrLQEcANmKrsFl.jpg" 
+                    alt="Forrest Gump" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Forrest Gump</h3>
                     <p class="movie-description">La vida de un hombre con discapacidad intelectual que vive eventos históricos cruciales.</p>
@@ -815,8 +904,8 @@
             
             <!-- PELÍCULA 11 - El Rey León -->
             <div class="movie-card">
-                <img src="https://image.tmdb.org/t/p/w300/4bjY6e1h3J7LxjSgZQxCf6mZvqN.jpg" 
-                     alt="El Rey León" class="movie-poster">
+                <img src="https://image.tmdb.org/t/p/w300/b0Bxk6JV8WidGj8dHj8X6cpgqC6.jpg" 
+                    alt="El Rey León" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Rey León</h3>
                     <p class="movie-description">Simba, un león joven, debe reclamar su lugar como rey después de la muerte de su padre.</p>
@@ -883,8 +972,8 @@
             
             <!-- PELÍCULA 13 - Reservoir Dogs -->
             <div class="movie-card">
-                <img src="https://image.tmdb.org/t/p/w300/twrncjnWqHwIxZ8qCj4m6N9D8f8.jpg" 
-                     alt="Reservoir Dogs" class="movie-poster">
+                <img src="https://image.tmdb.org/t/p/w300/4O1gK9uGwXFHSjD2Vpc2hY7HvJ.jpg" 
+                    alt="Reservoir Dogs" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">Reservoir Dogs</h3>
                     <p class="movie-description">Después de un robo fallido, los criminales sospechan que hay un informante entre ellos.</p>
@@ -1121,8 +1210,8 @@
             
             <!-- PELÍCULA 20 - El Gran Hotel Budapest -->
             <div class="movie-card">
-                <img src="https://image.tmdb.org/t/p/w300/eN1T1xJvjX6S5aI9HF2FbP7qqws.jpg" 
-                     alt="El Gran Hotel Budapest" class="movie-poster">
+                <img src="https://image.tmdb.org/t/p/w300/nX5XotM9yprCKarRH4fzOq1VM1J.jpg" 
+                    alt="El Gran Hotel Budapest" class="movie-poster">
                 <div class="movie-info">
                     <h3 class="movie-title">El Gran Hotel Budapest</h3>
                     <p class="movie-description">Las aventuras de Gustave H, un legendario conserje de hotel, y Zero Moustafa, su joven amigo.</p>
@@ -1196,6 +1285,168 @@
     </div>
 
     <script>
+        // CARGAR DATOS DEL USUARIO AL INICIAR
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar estado desde la sesión
+            const userStatusElement = document.getElementById('userStatus');
+            if (userStatusElement) {
+                userStatusElement.textContent = '📝 ' + (sessionStorage.getItem('userStatus') || 'Hola, soy nuevo en CineTec');
+            }
+            
+            // Cargar foto de perfil
+            const profileImage = document.getElementById('profileImage');
+            if (profileImage) {
+                const savedPhoto = sessionStorage.getItem('profilePhoto');
+                if (savedPhoto) {
+                    profileImage.src = savedPhoto;
+                }
+            }
+            
+            // Configurar fallback para imágenes
+            setupImageFallbacks();
+            
+            // Cargar preferencias del usuario
+            loadUserPreferences();
+            
+            // Cargar todos los votos
+            loadAllRatings();
+            
+            // Inicializar estrellas con eventos
+            document.querySelectorAll('.stars').forEach(starsContainer => {
+                const movie = starsContainer.dataset.movie;
+                
+                // Configurar eventos para estrellas
+                starsContainer.querySelectorAll('.star').forEach(star => {
+                    star.addEventListener('click', function() {
+                        const value = parseInt(this.dataset.value);
+                        rateMovie(movie, value);
+                    });
+                    
+                    star.addEventListener('mouseover', function() {
+                        const value = parseInt(this.dataset.value);
+                        highlightStars(starsContainer, value, true);
+                    });
+                    
+                    star.addEventListener('mouseout', function() {
+                        const currentRating = starsContainer.dataset.currentRating || 0;
+                        highlightStars(starsContainer, currentRating);
+                    });
+                });
+            });
+            
+            // Hacer estrellas responsivas al hover
+            document.querySelectorAll('.star').forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    this.style.transform = 'scale(1.3)';
+                });
+                
+                star.addEventListener('mouseout', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+        });
+
+        // FUNCIÓN PARA MANEJAR IMÁGENES QUE NO CARGAN
+        function setupImageFallbacks() {
+            document.querySelectorAll('.movie-poster').forEach(img => {
+                img.addEventListener('error', function() {
+                    this.src = 'https://via.placeholder.com/300x450?text=Imagen+no+disponible';
+                    this.alt = 'Imagen no disponible';
+                });
+            });
+        }
+
+        // FUNCIÓN PARA CARGAR TODOS LOS VOTOS
+        async function loadAllRatings() {
+            try {
+                const response = await fetch('/get_all_ratings');
+                const data = await response.json();
+                
+                if (data.success && data.ratings) {
+                    Object.keys(data.ratings).forEach(movie => {
+                        const ratingData = data.ratings[movie];
+                        const avgElement = document.getElementById(`avg-${movie}`);
+                        
+                        if (avgElement) {
+                            // Actualizar promedio
+                            avgElement.textContent = ratingData.promedio.toFixed(1);
+                            
+                            // Actualizar texto de votos
+                            const avgText = avgElement.nextElementSibling;
+                            if (avgText && avgText.classList.contains('average-text')) {
+                                avgText.textContent = `(${ratingData.total_votos} votos)`;
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando votos:', error);
+            }
+        }
+
+        // Función para cargar preferencias del usuario
+        async function loadUserPreferences() {
+            try {
+                const response = await fetch('/get_user_preferences');
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Guardar en sessionStorage para recargas rápidas
+                    if (data.descripcion) {
+                        sessionStorage.setItem('userStatus', data.descripcion);
+                        document.getElementById('userStatus').textContent = '📝 ' + data.descripcion;
+                    }
+                    
+                    if (data.foto_perfil) {
+                        sessionStorage.setItem('profilePhoto', data.foto_perfil);
+                        document.getElementById('profileImage').src = data.foto_perfil;
+                    }
+                    
+                    // Marcar películas favoritas
+                    if (data.favoritos) {
+                        data.favoritos.forEach(movie => {
+                            const button = document.querySelector(`[onclick*="${movie}"]`);
+                            if (button) {
+                                button.classList.add('favorited');
+                                button.innerHTML = '❤️ Eliminar de Favoritos';
+                            }
+                        });
+                    }
+                    
+                    // Mostrar calificaciones del usuario
+                    if (data.calificaciones) {
+                        Object.keys(data.calificaciones).forEach(movie => {
+                            const rating = data.calificaciones[movie];
+                            const starsContainer = document.querySelector(`[data-movie="${movie}"]`);
+                            if (starsContainer) {
+                                highlightStars(starsContainer, rating);
+                                starsContainer.dataset.currentRating = rating;
+                            }
+                        });
+                    }
+                    
+                    // Cargar promedios de películas
+                    if (data.promedios) {
+                        Object.keys(data.promedios).forEach(movie => {
+                            const avgElement = document.getElementById(`avg-${movie}`);
+                            if (avgElement) {
+                                const promedio = data.promedios[movie];
+                                avgElement.textContent = promedio.toFixed(1);
+                                
+                                // Actualizar también el texto de votos
+                                const avgText = avgElement.nextElementSibling;
+                                if (avgText && avgText.classList.contains('average-text')) {
+                                    avgText.textContent = `(${data.total_votos[movie] || 0} votos)`;
+                                }
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando preferencias:', error);
+            }
+        }
+
         // VARIABLES GLOBALES
         let selectedFile = null;
         let currentMovieForComment = '';
@@ -1315,6 +1566,9 @@
                     if (avgElement && data.promedio) {
                         avgElement.textContent = `★ ${data.promedio}`;
                     }
+                    
+                    // Recargar todos los votos
+                    loadAllRatings();
                 }
             } catch (error) {
                 showMessage('❌ Error al guardar calificación');
@@ -1334,7 +1588,7 @@
             });
         }
 
-        // FUNCIONES PARA FAVORITOS
+        // FUNCIONES PARA FAVORITOS - VERSIÓN CORREGIDA
         async function toggleFavorite(button, movie) {
             try {
                 const response = await fetch('/toggle_favorite', {
@@ -1348,18 +1602,117 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    // Actualizar el botón inmediatamente
                     if (data.es_favorita) {
-                        button.classList.remove('favorited');
-                        button.innerHTML = '❤️ Agregar a Favoritos';
-                        showMessage(`❌ "${movie}" eliminada de favoritos`);
-                    } else {
+                        // Ahora es favorita
                         button.classList.add('favorited');
                         button.innerHTML = '❤️ Eliminar de Favoritos';
                         showMessage(`✅ "${movie}" agregada a favoritos`);
+                    } else {
+                        // Ya no es favorita
+                        button.classList.remove('favorited');
+                        button.innerHTML = '❤️ Agregar a Favoritos';
+                        showMessage(`❌ "${movie}" eliminada de favoritos`);
                     }
+                } else {
+                    showMessage(`❌ Error: ${data.error || 'No se pudo actualizar favoritos'}`);
                 }
             } catch (error) {
-                showMessage('❌ Error al actualizar favoritos');
+                showMessage('❌ Error de conexión al servidor');
+                console.error('Error en toggleFavorite:', error);
+            }
+        }
+
+        // FUNCIONES PARA FAVORITOS - VERSIÓN MEJORADA
+        async function showFavorites() {
+            try {
+                showMessage('⏳ Cargando tus películas favoritas...');
+                
+                const response = await fetch('/get_favorites');
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.favoritas && data.favoritas.length > 0) {
+                        showFavoritesModal(data.favoritas);
+                        showMessage(`✅ Encontradas ${data.total} películas favoritas`);
+                    } else {
+                        showFavoritesModal([]);
+                        showMessage('ℹ️ No tienes películas favoritas todavía');
+                    }
+                } else {
+                    showMessage(`❌ Error: ${data.error || 'No se pudieron cargar los favoritos'}`);
+                }
+            } catch (error) {
+                showMessage('❌ Error de conexión al servidor');
+                console.error('Error en showFavorites:', error);
+            }
+        }
+
+        function showFavoritesModal(favoritas) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'favoritesModal';
+            modal.style.display = 'flex';
+            
+            let content = `
+                <div class="modal-content">
+                    <h3>⭐ Mis Películas Favoritas</h3>
+            `;
+            
+            if (favoritas && favoritas.length > 0) {
+                content += `<p class="favorites-count">Total: ${favoritas.length} película(s)</p>`;
+                content += '<div class="favorites-grid">';
+                
+                favoritas.forEach(pelicula => {
+                    const imagen = pelicula.portada || 'https://via.placeholder.com/300x450?text=Imagen+no+disponible';
+                    const promedio = pelicula.calificacion_promedio ? pelicula.calificacion_promedio.toFixed(1) : '0.0';
+                    
+                    content += `
+                        <div class="favorite-movie-card">
+                            <img src="${imagen}" 
+                                 alt="${pelicula.titulo}" 
+                                 class="favorite-movie-poster"
+                                 onerror="this.src='https://via.placeholder.com/300x450?text=Imagen+no+disponible'">
+                            <div class="favorite-movie-info">
+                                <div class="favorite-movie-title">${pelicula.titulo}</div>
+                                <div class="favorite-movie-platform">${pelicula.plataforma || 'Disponible en varias plataformas'}</div>
+                                <div class="favorite-movie-rating">
+                                    ★ ${promedio} / 5
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                content += '</div>';
+            } else {
+                content += `
+                    <div class="no-favorites">
+                        <p style="font-size: 24px; margin-bottom: 20px;">📽️</p>
+                        <p>No tienes películas favoritas todavía.</p>
+                        <p>¡Agrega algunas haciendo clic en ❤️ en cualquier película!</p>
+                    </div>
+                `;
+            }
+            
+            content += `
+                    <div class="modal-buttons">
+                        <button class="modal-btn cancel" onclick="closeFavoritesModal()">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.innerHTML = content;
+            document.body.appendChild(modal);
+        }
+
+        function closeFavoritesModal() {
+            const modal = document.getElementById('favoritesModal');
+            if (modal) {
+                modal.style.display = 'none';
+                setTimeout(() => modal.remove(), 300);
             }
         }
 
@@ -1477,46 +1830,17 @@
             }, 3000);
         }
 
-        // INICIALIZACIÓN
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar estrellas con eventos
-            document.querySelectorAll('.stars').forEach(starsContainer => {
-                const movie = starsContainer.dataset.movie;
-                
-                // Configurar eventos para estrellas
-                starsContainer.querySelectorAll('.star').forEach(star => {
-                    star.addEventListener('click', function() {
-                        const value = parseInt(this.dataset.value);
-                        rateMovie(movie, value);
-                    });
-                    
-                    star.addEventListener('mouseover', function() {
-                        const value = parseInt(this.dataset.value);
-                        highlightStars(starsContainer, value, true);
-                    });
-                    
-                    star.addEventListener('mouseout', function() {
-                        const currentRating = starsContainer.dataset.currentRating || 0;
-                        highlightStars(starsContainer, currentRating);
-                    });
-                });
-            });
-        });
-
         // FUNCIONES MODALES EXISTENTES
         function closeModal() {
             document.getElementById('imageModal').style.display = 'none';
         }
 
-        // HACER ESTRELLAS RESPONSIVAS AL HOVER
-        document.querySelectorAll('.star').forEach(star => {
-            star.addEventListener('mouseover', function() {
-                this.style.transform = 'scale(1.3)';
-            });
-            
-            star.addEventListener('mouseout', function() {
-                this.style.transform = 'scale(1)';
-            });
+        // Cerrar modal de favoritos al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('favoritesModal');
+            if (modal && event.target === modal) {
+                closeFavoritesModal();
+            }
         });
     </script>
 </body>
