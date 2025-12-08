@@ -229,6 +229,109 @@
             background: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
         }
         
+        /* ESTILOS PARA COMENTARIOS */
+        .comment-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #334155;
+        }
+        
+        .comment-btn {
+            background: #475569;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .comment-btn:hover {
+            background: #64748b;
+        }
+        
+        .comment-modal .modal-content {
+            max-width: 600px;
+        }
+        
+        .comments-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+            padding: 10px;
+            background: #0f172a;
+            border-radius: 8px;
+        }
+        
+        .comment-item {
+            background: #1e293b;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .comment-user {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        
+        .comment-date {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        
+        .comment-text {
+            color: #e2e8f0;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .comment-input {
+            width: 100%;
+            padding: 12px;
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 10px;
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .no-comments {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        /* PUNTUACIÓN PROMEDIO */
+        .rating-average {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #fbbf24;
+        }
+        
+        .average-text {
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+        
         /* MODAL PARA SUBIR FOTO */
         .modal {
             display: none;
@@ -390,6 +493,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'El Resplandor')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('El Resplandor')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-El Resplandor">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -413,6 +527,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'El Padrino')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('El Padrino')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-El Padrino">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -436,6 +561,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'El Caballero Oscuro')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('El Caballero Oscuro')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-El Caballero Oscuro">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -459,6 +595,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'La Lista de Schindler')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('La Lista de Schindler')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-La Lista de Schindler">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -482,6 +629,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Matrix')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Matrix')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Matrix">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -505,6 +663,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Origen')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Origen')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Origen">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -528,6 +697,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Pulp Fiction')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Pulp Fiction')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Pulp Fiction">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -551,6 +731,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'El Señor de los Anillos')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('El Señor de los Anillos')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-El Señor de los Anillos">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -574,6 +765,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Forrest Gump')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Forrest Gump')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Forrest Gump">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -597,6 +799,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Interestelar')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Interestelar')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Interestelar">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -620,6 +833,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'El Rey León')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('El Rey León')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-El Rey León">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -643,6 +867,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Gladiador')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Gladiador')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Gladiador">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -666,6 +901,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Reservoir Dogs')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Reservoir Dogs')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Reservoir Dogs">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -689,6 +935,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Titanic')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Titanic')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Titanic">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -712,6 +969,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Jurassic Park')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Jurassic Park')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Jurassic Park">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -735,6 +1003,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'El Silencio de los Inocentes')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('El Silencio de los Inocentes')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-El Silencio de los Inocentes">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -758,6 +1037,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Star Wars')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Star Wars')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Star Wars">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -781,6 +1071,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Terminator 2')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Terminator 2')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Terminator 2">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -804,6 +1105,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'Avatar')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('Avatar')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-Avatar">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -827,6 +1139,17 @@
                     <button class="favorite-btn" onclick="toggleFavorite(this, 'El Gran Hotel Budapest')">
                         ❤️ Agregar a Favoritos
                     </button>
+                    <!-- SECCIÓN DE COMENTARIOS -->
+                    <div class="comment-section">
+                        <button class="comment-btn" onclick="showCommentModal('El Gran Hotel Budapest')">
+                            💬 Comentar
+                        </button>
+                        <div class="rating-average">
+                            <span>★</span>
+                            <span id="avg-El Gran Hotel Budapest">0.0</span>
+                            <span class="average-text">(0 votos)</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -844,111 +1167,71 @@
         </div>
     </div>
 
+    <!-- MODAL PARA COMENTARIOS -->
+    <div id="commentModal" class="modal">
+        <div class="modal-content">
+            <h3>💬 Comentarios - <span id="commentMovieTitle"></span></h3>
+            
+            <div class="comments-list" id="commentsList">
+                <!-- Los comentarios se cargarán aquí -->
+            </div>
+            
+            <div class="comment-input-section">
+                <textarea 
+                    id="newComment" 
+                    class="comment-input" 
+                    placeholder="Escribe tu comentario aquí... (máx 500 caracteres)"
+                    maxlength="500"
+                ></textarea>
+                <div class="modal-buttons">
+                    <button class="modal-btn confirm" onclick="submitComment()">
+                        Publicar Comentario
+                    </button>
+                    <button class="modal-btn cancel" onclick="closeCommentModal()">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // VARIABLES GLOBALES
         let selectedFile = null;
-        let favorites = JSON.parse(localStorage.getItem('favorites')) || {};
-        let ratings = JSON.parse(localStorage.getItem('ratings')) || {};
+        let currentMovieForComment = '';
 
-        // INICIALIZAR ESTRELLAS Y FAVORITOS AL CARGAR
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar estrellas
-            document.querySelectorAll('.stars').forEach(starsContainer => {
-                const movie = starsContainer.dataset.movie;
-                const savedRating = ratings[movie];
-                if (savedRating) {
-                    highlightStars(starsContainer, savedRating);
-                }
-                
-                // Agregar eventos a las estrellas
-                starsContainer.querySelectorAll('.star').forEach(star => {
-                    star.addEventListener('click', function() {
-                        const value = parseInt(this.dataset.value);
-                        const movie = starsContainer.dataset.movie;
-                        ratings[movie] = value;
-                        localStorage.setItem('ratings', JSON.stringify(ratings));
-                        highlightStars(starsContainer, value);
-                        showMessage(`⭐ Calificaste "${movie}" con ${value} estrellas`);
-                    });
-                    
-                    star.addEventListener('mouseover', function() {
-                        const value = parseInt(this.dataset.value);
-                        highlightStars(starsContainer, value, true);
-                    });
-                    
-                    star.addEventListener('mouseout', function() {
-                        const movie = starsContainer.dataset.movie;
-                        const savedRating = ratings[movie] || 0;
-                        highlightStars(starsContainer, savedRating);
-                    });
-                });
-            });
-            
-            // Inicializar botones de favoritos
-            document.querySelectorAll('.favorite-btn').forEach(btn => {
-                const movie = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
-                if (favorites[movie]) {
-                    btn.classList.add('favorited');
-                    btn.innerHTML = '❤️ Eliminar de Favoritos';
-                }
-            });
-            
-            // Mostrar usuario actual
-            const username = "{{ session.usuario if session.usuario else 'Usuario' }}";
-            if (username !== 'Usuario') {
-                document.getElementById('usernameDisplay').textContent = username;
-            }
-        });
-
-        // FUNCIONES PARA ESTRELLAS
-        function highlightStars(container, rating, isHover = false) {
-            const stars = container.querySelectorAll('.star');
-            stars.forEach(star => {
-                const starValue = parseInt(star.dataset.value);
-                if (starValue <= rating) {
-                    star.style.color = '#fbbf24';
-                    star.style.textShadow = isHover ? '0 0 10px #fbbf24' : 'none';
-                } else {
-                    star.style.color = '#64748b';
-                    star.style.textShadow = 'none';
-                }
-            });
-        }
-
-        // FUNCIONES PARA FAVORITOS
-        function toggleFavorite(button, movie) {
-            if (favorites[movie]) {
-                delete favorites[movie];
-                button.classList.remove('favorited');
-                button.innerHTML = '❤️ Agregar a Favoritos';
-                showMessage(`❌ "${movie}" eliminada de favoritos`);
-            } else {
-                favorites[movie] = true;
-                button.classList.add('favorited');
-                button.innerHTML = '❤️ Eliminar de Favoritos';
-                showMessage(`✅ "${movie}" agregada a favoritos`);
-            }
-            localStorage.setItem('favorites', JSON.stringify(favorites));
-        }
-
-        // FUNCIONES PARA ESTADO DE USUARIO
-        function updateStatus() {
+        // FUNCIONES PARA PERFIL
+        async function updateStatus() {
             const newStatus = document.getElementById('newStatus').value;
-            if (newStatus.trim() === '') {
+            if (!newStatus.trim()) {
                 showMessage('⚠️ Escribe un estado primero');
                 return;
             }
             
-            document.getElementById('userStatus').textContent = '📝 ' + newStatus;
-            document.getElementById('newStatus').value = '';
-            
-            // Aquí normalmente enviarías al servidor
-            // fetch('/update_status', { method: 'POST', body: JSON.stringify({status: newStatus}) })
-            
-            showMessage('✅ Estado actualizado correctamente');
+            try {
+                const response = await fetch('/update_profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `descripcion=${encodeURIComponent(newStatus)}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('userStatus').textContent = '📝 ' + newStatus;
+                    document.getElementById('newStatus').value = '';
+                    showMessage('✅ Estado actualizado correctamente');
+                } else {
+                    showMessage('❌ Error al actualizar estado');
+                }
+            } catch (error) {
+                showMessage('❌ Error de conexión');
+            }
         }
 
-        // FUNCIONES PARA SUBIR IMAGEN
+        // FUNCIONES PARA FOTO DE PERFIL
         function uploadImage() {
             const fileInput = document.getElementById('imageUpload');
             selectedFile = fileInput.files[0];
@@ -959,7 +1242,7 @@
                     return;
                 }
                 
-                if (selectedFile.size > 5 * 1024 * 1024) { // 5MB
+                if (selectedFile.size > 5 * 1024 * 1024) {
                     showMessage('❌ La imagen no debe superar 5MB');
                     return;
                 }
@@ -968,26 +1251,219 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('profileImage').src = e.target.result;
+                    confirmImageUpload(e.target.result);
                 };
                 reader.readAsDataURL(selectedFile);
-                
-                // Mostrar modal de confirmación
-                document.getElementById('imageModal').style.display = 'flex';
             }
         }
 
-        function confirmImageUpload() {
-            // Aquí normalmente enviarías al servidor
-            // const formData = new FormData();
-            // formData.append('image', selectedFile);
-            // fetch('/upload_image', { method: 'POST', body: formData })
-            
-            showMessage('✅ Foto de perfil actualizada');
-            closeModal();
+        async function confirmImageUpload(imageData) {
+            try {
+                // Convertir a Blob para enviar
+                const blob = await fetch(imageData).then(r => r.blob());
+                const formData = new FormData();
+                formData.append('foto', blob, 'profile.jpg');
+                
+                const response = await fetch('/upload_photo', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('profileImage').src = data.foto_url;
+                    showMessage('✅ Foto de perfil actualizada');
+                } else {
+                    showMessage('❌ Error al subir foto');
+                }
+            } catch (error) {
+                showMessage('❌ Error de conexión');
+            }
         }
 
-        function closeModal() {
-            document.getElementById('imageModal').style.display = 'none';
+        // FUNCIONES PARA CALIFICACIÓN
+        function rateMovie(movie, rating) {
+            // Actualizar estrellas visualmente
+            const starsContainer = document.querySelector(`[data-movie="${movie}"]`);
+            highlightStars(starsContainer, rating);
+            
+            // Enviar al servidor
+            sendRatingToServer(movie, rating);
+        }
+
+        async function sendRatingToServer(movie, rating) {
+            try {
+                const response = await fetch('/rate_movie', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pelicula: movie,
+                        calificacion: rating
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(`⭐ Calificaste "${movie}" con ${rating} estrellas`);
+                    
+                    // Actualizar promedio si existe
+                    const avgElement = document.getElementById(`avg-${movie}`);
+                    if (avgElement && data.promedio) {
+                        avgElement.textContent = `★ ${data.promedio}`;
+                    }
+                }
+            } catch (error) {
+                showMessage('❌ Error al guardar calificación');
+            }
+        }
+
+        function highlightStars(container, rating, isHover = false) {
+            const stars = container.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.style.color = '#fbbf24';
+                    star.style.textShadow = isHover ? '0 0 10px #fbbf24' : 'none';
+                } else {
+                    star.style.color = '#64748b';
+                    star.style.textShadow = 'none';
+                }
+            });
+        }
+
+        // FUNCIONES PARA FAVORITOS
+        async function toggleFavorite(button, movie) {
+            try {
+                const response = await fetch('/toggle_favorite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ pelicula: movie })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.es_favorita) {
+                        button.classList.remove('favorited');
+                        button.innerHTML = '❤️ Agregar a Favoritos';
+                        showMessage(`❌ "${movie}" eliminada de favoritos`);
+                    } else {
+                        button.classList.add('favorited');
+                        button.innerHTML = '❤️ Eliminar de Favoritos';
+                        showMessage(`✅ "${movie}" agregada a favoritos`);
+                    }
+                }
+            } catch (error) {
+                showMessage('❌ Error al actualizar favoritos');
+            }
+        }
+
+        // FUNCIONES PARA COMENTARIOS
+        function showCommentModal(movie) {
+            currentMovieForComment = movie;
+            document.getElementById('commentMovieTitle').textContent = movie;
+            document.getElementById('commentModal').style.display = 'flex';
+            document.getElementById('newComment').value = '';
+            
+            // Cargar comentarios existentes
+            loadComments(movie);
+        }
+
+        function closeCommentModal() {
+            document.getElementById('commentModal').style.display = 'none';
+            currentMovieForComment = '';
+        }
+
+        async function loadComments(movie) {
+            try {
+                const response = await fetch(`/get_comments/${encodeURIComponent(movie)}`);
+                const data = await response.json();
+                
+                const commentsContainer = document.getElementById('commentsList');
+                commentsContainer.innerHTML = '';
+                
+                if (data.success && data.comentarios.length > 0) {
+                    data.comentarios.forEach(comment => {
+                        const commentElement = document.createElement('div');
+                        commentElement.className = 'comment-item';
+                        commentElement.innerHTML = `
+                            <div class="comment-header">
+                                <strong>${comment.nombre_usuario}</strong>
+                                <span class="comment-date">${comment.fecha}</span>
+                            </div>
+                            <div class="comment-text">${comment.comentario}</div>
+                        `;
+                        commentsContainer.appendChild(commentElement);
+                    });
+                } else {
+                    commentsContainer.innerHTML = '<p class="no-comments">No hay comentarios todavía. ¡Sé el primero!</p>';
+                }
+            } catch (error) {
+                console.error('Error cargando comentarios:', error);
+            }
+        }
+
+        async function submitComment() {
+            const commentText = document.getElementById('newComment').value.trim();
+            
+            if (!commentText) {
+                showMessage('⚠️ Escribe un comentario primero');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/add_comment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pelicula: currentMovieForComment,
+                        comentario: commentText
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('✅ Comentario agregado');
+                    document.getElementById('newComment').value = '';
+                    
+                    // Agregar el nuevo comentario a la lista
+                    const commentsContainer = document.getElementById('commentsList');
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment-item';
+                    commentElement.innerHTML = `
+                        <div class="comment-header">
+                            <strong>${data.comentario.nombre_usuario}</strong>
+                            <span class="comment-date">${data.comentario.fecha}</span>
+                        </div>
+                        <div class="comment-text">${data.comentario.comentario}</div>
+                    `;
+                    
+                    // Insertar al inicio
+                    if (commentsContainer.firstChild) {
+                        commentsContainer.insertBefore(commentElement, commentsContainer.firstChild);
+                    } else {
+                        commentsContainer.appendChild(commentElement);
+                    }
+                    
+                    // Remover mensaje de "no hay comentarios"
+                    const noComments = commentsContainer.querySelector('.no-comments');
+                    if (noComments) {
+                        noComments.remove();
+                    }
+                } else {
+                    showMessage('❌ Error al agregar comentario');
+                }
+            } catch (error) {
+                showMessage('❌ Error de conexión');
+            }
         }
 
         // FUNCIÓN PARA MOSTRAR MENSAJES
@@ -999,6 +1475,37 @@
             setTimeout(() => {
                 messageDiv.style.display = 'none';
             }, 3000);
+        }
+
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar estrellas con eventos
+            document.querySelectorAll('.stars').forEach(starsContainer => {
+                const movie = starsContainer.dataset.movie;
+                
+                // Configurar eventos para estrellas
+                starsContainer.querySelectorAll('.star').forEach(star => {
+                    star.addEventListener('click', function() {
+                        const value = parseInt(this.dataset.value);
+                        rateMovie(movie, value);
+                    });
+                    
+                    star.addEventListener('mouseover', function() {
+                        const value = parseInt(this.dataset.value);
+                        highlightStars(starsContainer, value, true);
+                    });
+                    
+                    star.addEventListener('mouseout', function() {
+                        const currentRating = starsContainer.dataset.currentRating || 0;
+                        highlightStars(starsContainer, currentRating);
+                    });
+                });
+            });
+        });
+
+        // FUNCIONES MODALES EXISTENTES
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
         }
 
         // HACER ESTRELLAS RESPONSIVAS AL HOVER
