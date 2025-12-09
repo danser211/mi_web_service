@@ -1385,67 +1385,67 @@
         }
 
         // Función para cargar preferencias del usuario
-        async function loadUserPreferences() {
-            try {
-                const response = await fetch('/get_user_preferences');
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Guardar en sessionStorage para recargas rápidas
-                    if (data.descripcion) {
-                        sessionStorage.setItem('userStatus', data.descripcion);
-                        document.getElementById('userStatus').textContent = '📝 ' + data.descripcion;
+async function loadUserPreferences() {
+    try {
+        const response = await fetch('/get_user_preferences');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Guardar en sessionStorage para recargas rápidas
+            if (data.descripcion) {
+                sessionStorage.setItem('userStatus', data.descripcion);
+                document.getElementById('userStatus').textContent = '📝 ' + data.descripcion;
+            }
+            
+            if (data.foto_perfil) {
+                sessionStorage.setItem('profilePhoto', data.foto_perfil);
+                document.getElementById('profileImage').src = data.foto_perfil;
+            }
+            
+            // Marcar películas favoritas
+            if (data.favoritos) {
+                data.favoritos.forEach(movie => {
+                    const button = document.querySelector(`[onclick*="${movie}"]`);
+                    if (button) {
+                        button.classList.add('favorited');
+                        button.innerHTML = '❤️ Eliminar de Favoritos';
                     }
-                    
-                    if (data.foto_perfil) {
-                        sessionStorage.setItem('profilePhoto', data.foto_perfil);
-                        document.getElementById('profileImage').src = data.foto_perfil;
+                });
+            }
+            
+            // Mostrar calificaciones del usuario
+            if (data.calificaciones) {
+                Object.keys(data.calificaciones).forEach(movie => {
+                    const rating = data.calificaciones[movie];
+                    const starsContainer = document.querySelector(`[data-movie="${movie}"]`);
+                    if (starsContainer) {
+                        highlightStars(starsContainer, rating);
+                        starsContainer.dataset.currentRating = rating;
                     }
-                    
-                    // Marcar películas favoritas
-                    if (data.favoritos) {
-                        data.favoritos.forEach(movie => {
-                            const button = document.querySelector(`[onclick*="${movie}"]`);
-                            if (button) {
-                                button.classList.add('favorited');
-                                button.innerHTML = '❤️ Eliminar de Favoritos';
-                            }
-                        });
+                });
+            }
+            
+            // Cargar promedios de películas
+            if (data.promedios) {
+                Object.keys(data.promedios).forEach(movie => {
+                    const avgElement = document.getElementById(`avg-${movie}`);
+                    if (avgElement) {
+                        const promedio = data.promedios[movie];
+                        avgElement.textContent = promedio.toFixed(1);
+                        
+                        // Actualizar también el texto de votos
+                        const avgText = avgElement.nextElementSibling;
+                        if (avgText && avgText.classList.contains('average-text')) {
+                            avgText.textContent = `(${data.total_votos[movie] || 0} votos)`;
+                        }
                     }
-                    
-                    // Mostrar calificaciones del usuario
-                    if (data.calificaciones) {
-                        Object.keys(data.calificaciones).forEach(movie => {
-                            const rating = data.calificaciones[movie];
-                            const starsContainer = document.querySelector(`[data-movie="${movie}"]`);
-                            if (starsContainer) {
-                                highlightStars(starsContainer, rating);
-                                starsContainer.dataset.currentRating = rating;
-                            }
-                        });
-                    }
-                    
-                    // Cargar promedios de películas
-                    if (data.promedios) {
-                        Object.keys(data.promedios).forEach(movie => {
-                            const avgElement = document.getElementById(`avg-${movie}`);
-                            if (avgElement) {
-                                const promedio = data.promedios[movie];
-                                avgElement.textContent = promedio.toFixed(1);
-                                
-                                // Actualizar también el texto de votos
-                                const avgText = avgElement.nextElementSibling;
-                                if (avgText && avgText.classList.contains('average-text')) {
-                                    avgText.textContent = `(${data.total_votos[movie] || 0} votos)`;
-                                }
-                            }
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Error cargando preferencias:', error);
+                });
             }
         }
+    } catch (error) {
+        console.error('Error cargando preferencias:', error);
+    }
+}
 
         // VARIABLES GLOBALES
         let selectedFile = null;
