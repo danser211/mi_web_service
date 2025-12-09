@@ -6,8 +6,6 @@ from datetime import datetime
 import hashlib
 import base64
 import re
-import certifi
-import urllib.parse
 
 # ==================== CONFIGURACIÓN ====================
 app = Flask(__name__)
@@ -21,18 +19,15 @@ def allowed_file(filename):
 
 # ==================== CONEXIÓN MONGODB ====================
 def get_mongo_client():
-    """Función para obtener conexión a MongoDB con certificados SSL"""
+    """Función para obtener conexión a MongoDB"""
     try:
         mongodb_uri = os.getenv("MONGODB_URI")
         if not mongodb_uri:
             raise ValueError("No se encontró MONGODB_URI en las variables de entorno")
         
-        # Usar certifi para certificados SSL
         client = MongoClient(mongodb_uri, 
-                           tlsCAFile=certifi.where(),
-                           serverSelectionTimeoutMS=10000,
-                           connectTimeoutMS=10000,
-                           socketTimeoutMS=10000,
+                           serverSelectionTimeoutMS=5000,
+                           connectTimeoutMS=5000,
                            retryWrites=True,
                            w='majority')
         
@@ -43,6 +38,131 @@ def get_mongo_client():
     except Exception as e:
         print(f"❌ Error de conexión MongoDB: {e}")
         return None
+
+# ==================== DICCIONARIO DE PELÍCULAS ====================
+# Información completa de todas las películas
+PELICULAS_INFO = {
+    "El Resplandor": {
+        "titulo": "El Resplandor",
+        "portada": "https://m.media-amazon.com/images/M/MV5BZWFlYmY2MGEtZjVkYS00YzU4LTg0YjQtYzY1ZGE3NTA5NGQxXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_.jpg",
+        "plataforma": "Amazon Prime",
+        "descripcion": "Un escritor acepta un trabajo de cuidador en un hotel aislado durante el invierno, donde su cordura se desmorona lentamente."
+    },
+    "El Padrino": {
+        "titulo": "El Padrino",
+        "portada": "https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg",
+        "plataforma": "Netflix",
+        "descripcion": "La saga de la familia Corleone, una poderosa dinastía de la mafia italiana en Nueva York."
+    },
+    "El Caballero Oscuro": {
+        "titulo": "El Caballero Oscuro",
+        "portada": "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_.jpg",
+        "plataforma": "HBO Max",
+        "descripcion": "Batman se enfrenta al Joker, un criminal psicótico que quiere sumir a Gotham en la anarquía."
+    },
+    "La Lista de Schindler": {
+        "titulo": "La Lista de Schindler",
+        "portada": "https://m.media-amazon.com/images/M/MV5BNDE4OTMxMTctNmRhYy00NWE2LTg3YzItYTk3M2UwOTU5Njg4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg",
+        "plataforma": "Disney+",
+        "descripcion": "Un empresario alemán salva a más de mil refugiados judíos durante el Holocausto."
+    },
+    "Matrix": {
+        "titulo": "Matrix",
+        "portada": "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg",
+        "plataforma": "HBO Max",
+        "descripcion": "Un hacker descubre que su realidad es una simulación creada por máquinas inteligentes."
+    },
+    "Origen": {
+        "titulo": "Origen",
+        "portada": "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg",
+        "plataforma": "Netflix",
+        "descripcion": "Un ladrón que roba secretos corporativos mediante el uso de tecnología para compartir sueños."
+    },
+    "Pulp Fiction": {
+        "titulo": "Pulp Fiction",
+        "portada": "https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg",
+        "plataforma": "Amazon Prime",
+        "descripcion": "Las vidas de dos matones, un boxeador y una pareja de atracadores se entrelazan."
+    },
+    "El Señor de los Anillos": {
+        "titulo": "El Señor de los Anillos",
+        "portada": "https://m.media-amazon.com/images/M/MV5BN2EyZjM3NzUtNWUzMi00MTgxLWI0NTctMzY4M2VlOTdjZWRiXkEyXkFqcGdeQXVyNDUzOTQ5MjY@._V1_.jpg",
+        "plataforma": "HBO Max",
+        "descripcion": "Un hobbit debe destruir un anillo poderoso en el Monte del Destino para salvar la Tierra Media."
+    },
+    "Forrest Gump": {
+        "titulo": "Forrest Gump",
+        "portada": "https://m.media-amazon.com/images/M/MV5BNWIwODRlZTUtY2U3ZS00Yzg1LWJhNzYtMmZiYmEyNmU1NjMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_.jpg",
+        "plataforma": "Netflix",
+        "descripcion": "La vida de un hombre con discapacidad intelectual que vive eventos históricos cruciales."
+    },
+    "Interestelar": {
+        "titulo": "Interestelar",
+        "portada": "https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg",
+        "plataforma": "Amazon Prime",
+        "descripcion": "Un grupo de exploradores viaja a través de un agujero de gusano en el espacio para asegurar la supervivencia humana."
+    },
+    "El Rey León": {
+        "titulo": "El Rey León",
+        "portada": "https://m.media-amazon.com/images/M/MV5BYTYxNGMyZTYtMjE3MS00MzNjLWFjNmYtMDk3N2FmM2JiM2M1XkEyXkFqcGdeQXVyNjY5NDU4NzI@._V1_.jpg",
+        "plataforma": "Disney+",
+        "descripcion": "Simba, un león joven, debe reclamar su lugar como rey después de la muerte de su padre."
+    },
+    "Gladiador": {
+        "titulo": "Gladiador",
+        "portada": "https://m.media-amazon.com/images/M/MV5BMDliMmNhNDEtODUyOS00MjNlLTgxODEtN2U3NzIxMGVkZTA1L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg",
+        "plataforma": "Netflix",
+        "descripcion": "Un general romano traicionado se convierte en gladiador para vengar la muerte de su familia."
+    },
+    "Reservoir Dogs": {
+        "titulo": "Reservoir Dogs",
+        "portada": "https://m.media-amazon.com/images/M/MV5BZmExNmEwYWItYmQzOS00YjA5LTk2MjktZjEyZDE1Y2QxNjA1XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_.jpg",
+        "plataforma": "Amazon Prime",
+        "descripcion": "Después de un robo fallido, los criminales sospechan que hay un informante entre ellos."
+    },
+    "Titanic": {
+        "titulo": "Titanic",
+        "portada": "https://m.media-amazon.com/images/M/MV5BMDdmZGU3NDQtY2E5My00ZTliLWIzOTUtMTY4ZGI1YjdiNjk3XkEyXkFqcGdeQXVyNTA4NzY1MzY@._V1_.jpg",
+        "plataforma": "Netflix",
+        "descripcion": "Una joven de alta sociedad y un artista pobre se enamoran a bordo del lujoso trasatlántico."
+    },
+    "Jurassic Park": {
+        "titulo": "Jurassic Park",
+        "portada": "https://m.media-amazon.com/images/M/MV5BMjM2MDgxMDg0Nl5BMl5BanBnXkFtZTgwNTM2OTM5NDE@._V1_.jpg",
+        "plataforma": "Amazon Prime",
+        "descripcion": "Un parque temático con dinosaurios clonados se convierte en una pesadilla cuando los animales escapan."
+    },
+    "El Silencio de los Inocentes": {
+        "titulo": "El Silencio de los Inocentes",
+        "portada": "https://m.media-amazon.com/images/M/MV5BNjNhZTk0ZmEtNjJhMi00YzFlLWE1MmEtYzM1M2ZmMGMwMTU4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg",
+        "plataforma": "HBO Max",
+        "descripcion": "Una joven agente del FBI busca la ayuda de un brillante asesino en serie para atrapar a otro."
+    },
+    "Star Wars": {
+        "titulo": "Star Wars: Una Nueva Esperanza",
+        "portada": "https://m.media-amazon.com/images/M/MV5BNzVlY2MwMjktM2E4OS00Y2Y3LWE3ZjctYzhkZGM3YzA1ZWM2XkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg",
+        "plataforma": "Disney+",
+        "descripcion": "Luke Skywalker se une a la rebelión para rescatar a la princesa Leia y derrotar al Imperio Galáctico."
+    },
+    "Terminator 2": {
+        "titulo": "Terminator 2: El Juicio Final",
+        "portada": "https://m.media-amazon.com/images/M/MV5BMGU2NzRmZjUtOGUxYS00ZjdjLWEwZWItY2NlM2JhNjkxNTFmXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg",
+        "plataforma": "Netflix",
+        "descripcion": "Un cyborg es enviado del futuro para proteger al joven John Connor de un Terminator más avanzado."
+    },
+    "Avatar": {
+        "titulo": "Avatar",
+        "portada": "https://m.media-amazon.com/images/M/MV5BMTYwOTEwNjAzMl5BMl5BanBnXkFtZTcwODc5MTUwMw@@._V1_.jpg",
+        "plataforma": "Disney+",
+        "descripcion": "Un marine parapléjico es enviado a la luna Pandora en una misión única, pero se enfrenta a un dilema moral."
+    },
+    "El Gran Hotel Budapest": {
+        "titulo": "El Gran Hotel Budapest",
+        "portada": "https://m.media-amazon.com/images/M/MV5BMzM5NjUxOTEyMl5BMl5BanBnXkFtZTgwNjEyMDM0MDE@._V1_.jpg",
+        "plataforma": "Amazon Prime",
+        "descripcion": "Las aventuras de Gustave H, un legendario conserje de hotel, y Zero Moustafa, su joven amigo."
+    }
+}
 
 # ==================== FUNCIONES AUXILIARES ====================
 def hash_password(password):
@@ -77,11 +197,16 @@ def iniciopy():
 def registrow():
     return render_template("registrow.html")
 
-# ==================== PELISPY - PÁGINA PRINCIPAL ====================
-@app.route("/pelispy")
-def pelispy():
-    if 'usuario' not in session:
-        flash("Debes iniciar sesión primero", "error")
+# ==================== LOGIN MEJORADO ====================
+@app.route("/login", methods=["POST"])
+def login():
+    usuario = request.form.get("usuario", "").strip()
+    password = request.form.get("password", "").strip()
+    
+    print(f"\n🔐 Intento de login para usuario: {usuario}")
+    
+    if not usuario or not password:
+        flash("Usuario y contraseña requeridos", "error")
         return redirect(url_for('iniciopy'))
     
     client = get_mongo_client()
@@ -92,34 +217,126 @@ def pelispy():
     try:
         db = client.cineTecDB
         
-        # Obtener datos del usuario
-        usuario_data = db.usuarios.find_one({"usuario": session['usuario']})
+        # Buscar usuario
+        usuario_data = db.usuarios.find_one({"usuario": usuario})
         
         if not usuario_data:
-            flash("Usuario no encontrado", "error")
-            return redirect(url_for('logout'))
+            print(f"❌ Usuario no encontrado: {usuario}")
+            flash("Usuario o contraseña incorrectos", "error")
+            client.close()
+            return redirect(url_for('iniciopy'))
         
-        # Obtener datos del usuario
+        # Verificar contraseña
+        password_hash = hash_password(password)
+        if usuario_data["password"] != password_hash:
+            print(f"❌ Contraseña incorrecta para: {usuario}")
+            flash("Usuario o contraseña incorrectos", "error")
+            client.close()
+            return redirect(url_for('iniciopy'))
+        
+        # ÉXITO: Configurar sesión PERO SIN FOTO en base64
+        session['usuario'] = usuario_data["usuario"]
+        session['nombre'] = usuario_data["nombre"]
+        session['user_id'] = str(usuario_data["_id"])
+        session['descripcion'] = usuario_data.get('descripcion', 'Hola, soy nuevo en CineTec')
+        
+        # NO guardar la foto completa en la sesión, solo la URL si no es base64
+        foto_perfil = usuario_data.get('foto_perfil', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png')
+        if foto_perfil.startswith('http'):
+            session['foto_perfil'] = foto_perfil
+        else:
+            # Si es base64, usar la default para no inflar la cookie
+            session['foto_perfil'] = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+        
+        session['favoritos'] = usuario_data.get('favoritos', [])
+        
+        print(f"✅ Login exitoso para: {usuario}")
+        print(f"✅ Sesión establecida (tamaño reducido)")
+        
+        flash(f"¡Bienvenido {usuario_data['nombre']}!", "success")
+        client.close()
+        return redirect(url_for('pelispy'))
+            
+    except Exception as e:
+        print(f"❌ Error en login: {e}")
+        client.close()
+        flash(f"Error en el inicio de sesión: {str(e)}", "error")
+        return redirect(url_for('iniciopy'))
+
+# ==================== PELISPY ====================
+@app.route("/pelispy")
+def pelispy():
+    if 'usuario' not in session:
+        print("❌ No hay sesión, redirigiendo a login")
+        flash("Debes iniciar sesión primero", "error")
+        return redirect(url_for('iniciopy'))
+    
+    print(f"✅ Usuario autenticado: {session['usuario']}")
+    
+    client = get_mongo_client()
+    if not client:
+        flash("Error de conexión a la base de datos", "error")
+        return redirect(url_for('iniciopy'))
+    
+    try:
+        db = client.cineTecDB
+        
+        # Verificar que el usuario aún existe
+        usuario_data = db.usuarios.find_one({"usuario": session['usuario']})
+        if not usuario_data:
+            print(f"❌ Usuario no encontrado en DB: {session['usuario']}")
+            session.clear()
+            flash("Tu cuenta ya no existe", "error")
+            return redirect(url_for('iniciopy'))
+        
+        # Obtener datos actualizados del usuario
         descripcion_actual = usuario_data.get('descripcion', 'Hola, soy nuevo en CineTec')
         foto_actual = usuario_data.get('foto_perfil', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png')
         favoritos_actual = usuario_data.get('favoritos', [])
         
-        # Actualizar sesión
-        session['descripcion'] = descripcion_actual
-        session['foto_perfil'] = foto_actual
-        session['favoritos'] = favoritos_actual
-        session['user_id'] = str(usuario_data['_id'])
-        
-        # Obtener todas las películas
-        peliculas = list(db.peliculas.find({}))
+        # Obtener películas usando el diccionario PELICULAS_INFO
+        peliculas = []
+        for titulo, info in PELICULAS_INFO.items():
+            pelicula_info = {
+                'titulo': titulo,
+                'descripcion': info.get('descripcion', ''),
+                'portada': info.get('portada', ''),
+                'plataforma': info.get('plataforma', ''),
+                'calificacion_promedio': 0,
+                'total_calificaciones': 0
+            }
+            
+            # Intentar obtener calificaciones desde MongoDB
+            try:
+                calificacion_data = db.calificaciones.aggregate([
+                    {'$match': {'pelicula': titulo}},
+                    {'$group': {
+                        '_id': '$pelicula',
+                        'promedio': {'$avg': '$calificacion'},
+                        'total_votos': {'$sum': 1}
+                    }}
+                ])
+                
+                calificacion_result = list(calificacion_data)
+                if calificacion_result:
+                    pelicula_info['calificacion_promedio'] = round(calificacion_result[0]['promedio'], 1)
+                    pelicula_info['total_calificaciones'] = calificacion_result[0]['total_votos']
+            except Exception as e:
+                print(f"⚠️ Error obteniendo calificaciones para {titulo}: {e}")
+                # Continuar con valores por defecto
+            
+            peliculas.append(pelicula_info)
         
         # Obtener calificaciones del usuario actual
         calificaciones_usuario = {}
-        user_ratings = db.calificaciones.find({"usuario": session['usuario']})
-        for cal in user_ratings:
-            calificaciones_usuario[cal['pelicula']] = cal['calificacion']
+        try:
+            user_ratings = db.calificaciones.find({"usuario": session['usuario']})
+            for cal in user_ratings:
+                calificaciones_usuario[cal['pelicula']] = cal['calificacion']
+        except Exception as e:
+            print(f"⚠️ Error obteniendo calificaciones del usuario: {e}")
         
-        # Obtener promedio de todas las películas
+        # Crear diccionarios de promedios y total_votos
         promedios = {}
         total_votos = {}
         for pelicula in peliculas:
@@ -128,6 +345,9 @@ def pelispy():
         
         client.close()
         
+        print(f"✅ Datos cargados: {len(peliculas)} películas, {len(favoritos_actual)} favoritos")
+        
+        # Renderizar el template con los datos
         return render_template("pelispy.html", 
                              usuario=session['usuario'],
                              descripcion=descripcion_actual,
@@ -140,10 +360,15 @@ def pelispy():
         
     except Exception as e:
         print(f"❌ Error en pelispy: {e}")
-        client.close()
+        import traceback
+        traceback.print_exc()  # Esto mostrará el error completo en la consola
+        
+        if 'client' in locals():
+            client.close()
+        
         flash("Error al cargar las películas", "error")
         return redirect(url_for('iniciopy'))
-
+    
 # ==================== REGISTRO ====================
 @app.route("/register", methods=["POST"])
 def register():
@@ -151,6 +376,8 @@ def register():
     nombre = request.form.get("nombre", "").strip()
     email = request.form.get("email", "").strip()
     password = request.form.get("password", "").strip()
+    
+    print(f"\n📝 Intento de registro: {usuario}")
     
     # Validaciones
     if not all([usuario, nombre, email, password]):
@@ -209,56 +436,15 @@ def register():
         db.usuarios.insert_one(nuevo_usuario)
         client.close()
         
+        print(f"✅ Registro exitoso: {usuario}")
         flash("¡Registro exitoso! Ahora puedes iniciar sesión", "success")
         return redirect(url_for('iniciopy'))
         
     except Exception as e:
         client.close()
+        print(f"❌ Error en registro: {e}")
         flash(f"Error en el registro: {str(e)}", "error")
         return redirect(url_for('registrow'))
-
-# ==================== LOGIN ====================
-@app.route("/login", methods=["POST"])
-def login():
-    usuario = request.form.get("usuario", "").strip()
-    password = request.form.get("password", "").strip()
-    
-    if not usuario or not password:
-        flash("Usuario y contraseña requeridos", "error")
-        return redirect(url_for('iniciopy'))
-    
-    client = get_mongo_client()
-    if not client:
-        flash("Error de conexión a la base de datos", "error")
-        return redirect(url_for('iniciopy'))
-    
-    try:
-        db = client.cineTecDB
-        
-        # Buscar usuario
-        usuario_data = db.usuarios.find_one({"usuario": usuario})
-        
-        if usuario_data and usuario_data["password"] == hash_password(password):
-            # Configurar sesión
-            session['usuario'] = usuario_data["usuario"]
-            session['nombre'] = usuario_data["nombre"]
-            session['user_id'] = str(usuario_data["_id"])
-            session['descripcion'] = usuario_data.get('descripcion', 'Hola, soy nuevo en CineTec')
-            session['foto_perfil'] = usuario_data.get('foto_perfil', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png')
-            session['favoritos'] = usuario_data.get('favoritos', [])
-            
-            flash(f"¡Bienvenido {usuario_data['nombre']}!", "success")
-            client.close()
-            return redirect(url_for('pelispy'))
-        else:
-            flash("Usuario o contraseña incorrectos", "error")
-            client.close()
-            return redirect(url_for('iniciopy'))
-            
-    except Exception as e:
-        client.close()
-        flash(f"Error en el inicio de sesión: {str(e)}", "error")
-        return redirect(url_for('iniciopy'))
 
 # ==================== ACTUALIZAR ESTADO ====================
 @app.route("/update_profile", methods=["POST"])
@@ -345,8 +531,8 @@ def upload_photo():
             )
             
             if resultado.modified_count > 0 or resultado.matched_count > 0:
-                # Actualizar sesión
-                session['foto_perfil'] = foto_url
+                # NO actualizar la sesión con la foto base64
+                # Solo actualizamos en MongoDB, la sesión mantiene la URL default
                 
                 client.close()
                 return jsonify({
@@ -415,41 +601,25 @@ def rate_movie():
         if calificaciones:
             total = sum(c['calificacion'] for c in calificaciones)
             promedio = total / len(calificaciones)
-            
-            # Actualizar la película
-            db.peliculas.update_one(
-                {"titulo": pelicula},
-                {
-                    "$set": {
-                        "calificacion_promedio": round(promedio, 1),
-                        "total_calificaciones": len(calificaciones)
-                    }
-                }
-            )
-            
-            # Obtener el promedio actualizado
-            pelicula_data = db.peliculas.find_one({"titulo": pelicula})
-            promedio_actual = pelicula_data.get('calificacion_promedio', 0)
-            total_votos = pelicula_data.get('total_calificaciones', 0)
         else:
-            promedio_actual = 0
-            total_votos = 0
+            promedio = 0
         
         client.close()
         return jsonify({
             "success": True, 
             "message": "Calificación guardada",
-            "promedio": promedio_actual,
-            "total_votos": total_votos
+            "promedio": round(promedio, 1),
+            "total_votos": len(calificaciones)
         })
         
     except Exception as e:
         client.close()
         return jsonify({"success": False, "error": str(e)}), 500
 
-# ==================== FAVORITOS ====================
+# ==================== FAVORITOS - TOGGLE ====================
 @app.route("/toggle_favorite", methods=["POST"])
 def toggle_favorite():
+    """Agrega o elimina una película de favoritos en MongoDB"""
     if 'usuario' not in session:
         return jsonify({"success": False, "error": "No autorizado"}), 401
     
@@ -510,58 +680,97 @@ def toggle_favorite():
 # ==================== OBTENER FAVORITOS ====================
 @app.route("/get_favorites", methods=["GET"])
 def get_favorites():
-    if 'usuario' not in session:
-        return jsonify({"success": False, "error": "No autorizado"}), 401
-    
-    client = get_mongo_client()
-    if not client:
-        return jsonify({"success": False, "error": "Error de conexión"}), 500
-    
+    """Obtiene las películas favoritas del usuario desde MongoDB"""
     try:
+        # Verificar si el usuario está en sesión
+        if 'usuario' not in session:
+            return jsonify({
+                'success': False,
+                'error': 'Usuario no autenticado'
+            }), 401
+        
+        # Obtener usuario de la sesión
+        usuario_actual = session['usuario']
+        
+        client = get_mongo_client()
+        if not client:
+            return jsonify({
+                'success': False,
+                'error': 'Error de conexión a MongoDB'
+            }), 500
+        
         db = client.cineTecDB
         
-        # Obtener favoritos del usuario
-        usuario = db.usuarios.find_one({"usuario": session['usuario']})
+        # Buscar usuario en MongoDB
+        usuario = db.usuarios.find_one({'usuario': usuario_actual})
+        
         if not usuario:
             client.close()
-            return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
+            return jsonify({
+                'success': False,
+                'error': 'Usuario no encontrado en la base de datos'
+            }), 404
         
-        favoritos = usuario.get('favoritos', [])
+        # Obtener lista de favoritos del usuario
+        favoritos_usuario = usuario.get('favoritos', [])
         
         # Si no hay favoritos, retornar lista vacía
-        if not favoritos:
+        if not favoritos_usuario:
             client.close()
             return jsonify({
-                "success": True,
-                "favoritas": [],
-                "total": 0,
-                "message": "No tienes películas favoritas"
+                'success': True,
+                'favoritas': [],
+                'total': 0,
+                'message': 'No tienes películas favoritas todavía'
             })
         
-        # Obtener información de cada película favorita
+        # Obtener información completa de cada película favorita
         peliculas_favoritas = []
-        for titulo in favoritos:
-            pelicula = db.peliculas.find_one({"titulo": titulo})
-            if pelicula:
-                peliculas_favoritas.append({
-                    "titulo": pelicula["titulo"],
-                    "portada": pelicula.get("portada", ""),
-                    "calificacion_promedio": pelicula.get("calificacion_promedio", 0),
-                    "descripcion": pelicula.get("descripcion", ""),
-                    "plataforma": pelicula.get("plataforma", "")
-                })
+        
+        for pelicula_nombre in favoritos_usuario:
+            if pelicula_nombre in PELICULAS_INFO:
+                pelicula_info = PELICULAS_INFO[pelicula_nombre].copy()
+                
+                # Obtener calificación promedio de la película desde la colección de calificaciones
+                try:
+                    calificacion_data = db.calificaciones.aggregate([
+                        {'$match': {'pelicula': pelicula_nombre}},
+                        {'$group': {
+                            '_id': '$pelicula',
+                            'promedio': {'$avg': '$calificacion'},
+                            'total_votos': {'$sum': 1}
+                        }}
+                    ])
+                    
+                    calificacion_result = list(calificacion_data)
+                    if calificacion_result:
+                        pelicula_info['calificacion_promedio'] = calificacion_result[0]['promedio']
+                        pelicula_info['total_votos'] = calificacion_result[0]['total_votos']
+                    else:
+                        pelicula_info['calificacion_promedio'] = 0
+                        pelicula_info['total_votos'] = 0
+                except:
+                    pelicula_info['calificacion_promedio'] = 0
+                    pelicula_info['total_votos'] = 0
+                
+                peliculas_favoritas.append(pelicula_info)
         
         client.close()
         return jsonify({
-            "success": True,
-            "favoritas": peliculas_favoritas,
-            "total": len(peliculas_favoritas),
-            "message": f"Tienes {len(peliculas_favoritas)} películas favoritas"
+            'success': True,
+            'favoritas': peliculas_favoritas,
+            'total': len(peliculas_favoritas),
+            'message': f'Tienes {len(peliculas_favoritas)} películas favoritas'
         })
         
     except Exception as e:
-        client.close()
-        return jsonify({"success": False, "error": str(e)}), 500
+        print(f"❌ Error en get_favorites: {str(e)}")
+        if 'client' in locals():
+            client.close()
+        return jsonify({
+            'success': False,
+            'error': f'Error interno del servidor: {str(e)}'
+        }), 500
 
 # ==================== OBTENER TODAS LAS CALIFICACIONES ====================
 @app.route("/get_all_ratings", methods=["GET"])
@@ -573,78 +782,101 @@ def get_all_ratings():
     try:
         db = client.cineTecDB
         
-        # Obtener todas las películas con sus promedios
-        peliculas = list(db.peliculas.find({}))
+        # Agregar pipeline de agregación para obtener promedios
+        pipeline = [
+            {
+                '$group': {
+                    '_id': '$pelicula',
+                    'promedio': {'$avg': '$calificacion'},
+                    'total_votos': {'$sum': 1}
+                }
+            }
+        ]
         
-        ratings_data = {}
-        for pelicula in peliculas:
-            ratings_data[pelicula['titulo']] = {
-                'promedio': pelicula.get('calificacion_promedio', 0),
-                'total_votos': pelicula.get('total_calificaciones', 0)
+        resultados = list(db.calificaciones.aggregate(pipeline))
+        
+        ratings = {}
+        for resultado in resultados:
+            ratings[resultado['_id']] = {
+                'promedio': round(resultado['promedio'], 1),
+                'total_votos': resultado['total_votos']
             }
         
         client.close()
-        return jsonify({
-            "success": True,
-            "ratings": ratings_data
-        })
+        return jsonify({'success': True, 'ratings': ratings})
         
     except Exception as e:
+        print(f"❌ Error en get_all_ratings: {str(e)}")
         client.close()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ==================== OBTENER DATOS DEL USUARIO ====================
 @app.route("/get_user_preferences", methods=["GET"])
 def get_user_preferences():
-    if 'usuario' not in session:
-        return jsonify({"success": False, "error": "No autorizado"}), 401
-    
-    client = get_mongo_client()
-    if not client:
-        return jsonify({"success": False, "error": "Error de conexión"}), 500
-    
+    """Obtiene todas las preferencias del usuario desde MongoDB"""
     try:
+        if 'usuario' not in session:
+            return jsonify({'success': False, 'error': 'No autenticado'}), 401
+        
+        usuario_actual = session['usuario']
+        
+        client = get_mongo_client()
+        if not client:
+            return jsonify({'success': False, 'error': 'Error de conexión'}), 500
+        
         db = client.cineTecDB
         
         # Obtener datos del usuario
-        usuario_data = db.usuarios.find_one({"usuario": session['usuario']})
+        usuario_data = db.usuarios.find_one({'usuario': usuario_actual})
         
         if not usuario_data:
             client.close()
-            return jsonify({"success": False, "error": "Usuario no encontrado"}), 404
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
         
         # Obtener favoritos
         favoritos = usuario_data.get('favoritos', [])
         
         # Obtener calificaciones del usuario
         calificaciones_usuario = {}
-        calificaciones_db = db.calificaciones.find({"usuario": session['usuario']})
-        for cal in calificaciones_db:
-            calificaciones_usuario[cal['pelicula']] = cal['calificacion']
+        calificaciones = db.calificaciones.find({'usuario': usuario_actual})
+        for calif in calificaciones:
+            calificaciones_usuario[calif['pelicula']] = calif['calificacion']
         
-        # Obtener promedios de todas las películas
+        # Obtener promedios generales de todas las películas
         promedios = {}
         total_votos = {}
-        peliculas = list(db.peliculas.find({}))
-        for pelicula in peliculas:
-            promedios[pelicula['titulo']] = pelicula.get('calificacion_promedio', 0)
-            total_votos[pelicula['titulo']] = pelicula.get('total_calificaciones', 0)
+        pipeline = [
+            {
+                '$group': {
+                    '_id': '$pelicula',
+                    'promedio': {'$avg': '$calificacion'},
+                    'total_votos': {'$sum': 1}
+                }
+            }
+        ]
+        
+        resultados = list(db.calificaciones.aggregate(pipeline))
+        for resultado in resultados:
+            promedios[resultado['_id']] = round(resultado['promedio'], 1)
+            total_votos[resultado['_id']] = resultado['total_votos']
         
         client.close()
         
         return jsonify({
-            "success": True,
-            "descripcion": usuario_data.get('descripcion', 'Hola, soy nuevo en CineTec'),
-            "foto_perfil": usuario_data.get('foto_perfil', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'),
-            "favoritos": favoritos,
-            "calificaciones": calificaciones_usuario,
-            "promedios": promedios,
-            "total_votos": total_votos
+            'success': True,
+            'descripcion': usuario_data.get('descripcion', 'Hola, soy nuevo en CineTec'),
+            'foto_perfil': usuario_data.get('foto_perfil', 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'),
+            'favoritos': favoritos,
+            'calificaciones': calificaciones_usuario,
+            'promedios': promedios,
+            'total_votos': total_votos
         })
         
     except Exception as e:
-        client.close()
-        return jsonify({"success": False, "error": str(e)}), 500
+        print(f"❌ Error en get_user_preferences: {str(e)}")
+        if 'client' in locals():
+            client.close()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ==================== COMENTARIOS ====================
 @app.route("/add_comment", methods=["POST"])
@@ -727,26 +959,18 @@ def get_comments(pelicula):
         client.close()
         return jsonify({"success": False, "error": str(e)}), 500
 
-# ==================== HEALTH CHECK ====================
-@app.route("/health")
-def health_check():
-    return jsonify({"status": "ok", "message": "Servidor funcionando"}), 200
-
 # ==================== LOGOUT ====================
 @app.route("/logout")
 def logout():
+    print(f"\n👋 Logout para: {session.get('usuario', 'N/A')}")
     session.clear()
     flash("Has cerrado sesión correctamente", "success")
     return redirect(url_for('index'))
 
-# ==================== MANEJAR ERRORES ====================
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
-
-@app.errorhandler(500)
-def internal_server_error(e):
-    return render_template('500.html'), 500
+# ==================== HEALTH CHECK ====================
+@app.route("/health")
+def health_check():
+    return jsonify({"status": "ok", "message": "Servidor funcionando"}), 200
 
 # ==================== INICIAR APLICACIÓN ====================
 if __name__ == "__main__":
